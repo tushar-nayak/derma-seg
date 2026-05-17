@@ -38,7 +38,7 @@ def evaluate_promptable(args):
 
     for sample in tqdm(test_samples, desc="promptable-eval"):
         image, mask = load_lumiere_slice(sample, image_size=args.image_size)
-        image_rgb = grayscale_to_rgb(np.clip(image * 255.0, 0, 255).astype(np.uint8))
+        image_rgb = grayscale_to_rgb(np.clip(image[0] * 255.0, 0, 255).astype(np.uint8))
         box = mask_to_box(mask, pad=args.box_pad)
 
         pred_mask, score = predictor.predict_with_box(image_rgb, box)

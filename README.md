@@ -25,7 +25,7 @@ The main benchmark uses the local LUMIERE source data at:
 
 `/home/sofa/host_dir/hub/glioblastoma-evolution/data/lumiere`
 
-The training pipeline indexes FLAIR volumes and segmentation masks directly, then builds slice-level samples with patient-level train/val/test splits to avoid leakage.
+The training pipeline indexes LUMIERE volumes and segmentation masks directly, then builds slice-level samples with patient-level train/val/test splits to avoid leakage.
 
 ## Setup
 
@@ -38,13 +38,13 @@ pip install -r requirements.txt
 2. Train a model on LUMIERE:
 
 ```bash
-python scripts/train.py --dataset lumiere --model unet
+python scripts/train.py --dataset lumiere --modalities flair --model unet
 ```
 
 3. Try the transformer-based model:
 
 ```bash
-python scripts/train.py --dataset lumiere --model swin_unet
+python scripts/train.py --dataset lumiere --modalities flair --model swin_unet --pretrained
 ```
 
 4. Run the PNG fallback dataset if needed:
@@ -68,12 +68,13 @@ python scripts/evaluate_promptable.py --model sam --checkpoint /path/to/sam_chec
 - A SegFormer-style non-U-Net transformer baseline.
 - Optional SAM/MedSAM promptable evaluation with oracle box prompts.
 - Reproducible metric saving under `runs/<dataset>/<model>/metrics.json`.
+- Final benchmark runs currently use FLAIR-only inputs for tractable full-dataset training; multimodal support remains available via `--modalities flair,t1,t2,ct1`.
 
 ## Results
 
 Populate the table below only after running the benchmark on your machine.
 
-A reproducible smoke benchmark from bounded real-data runs is saved in [results/smoke_benchmark.md](./results/smoke_benchmark.md).
+A reproducible final benchmark from the full PNG cache run is saved in [results/final_benchmark.md](./results/final_benchmark.md). A smaller smoke benchmark is also preserved in [results/smoke_benchmark.md](./results/smoke_benchmark.md).
 
 | Model | Val Dice | Test Dice | Test IoU |
 | --- | ---: | ---: | ---: |

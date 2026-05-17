@@ -14,7 +14,10 @@ from torch.utils.data import Dataset
 class LumiereSample:
     patient_id: str
     week_id: str
-    image_path: str
+    flair_path: str
+    t1_path: str
+    t2_path: str
+    ct1_path: str
     mask_path: str
     slice_idx: int
 
@@ -57,8 +60,11 @@ def discover_lumiere_samples(
 
         for week_dir in sorted(p for p in patient_dir.iterdir() if p.is_dir()):
             flair_path = week_dir / "FLAIR.nii.gz"
+            t1_path = week_dir / "T1.nii.gz"
+            t2_path = week_dir / "T2.nii.gz"
+            ct1_path = week_dir / "CT1.nii.gz"
             seg_path = week_dir / "HD-GLIO-AUTO-segmentation" / "registered" / "segmentation.nii.gz"
-            if not flair_path.exists() or not seg_path.exists():
+            if not flair_path.exists() or not t1_path.exists() or not t2_path.exists() or not ct1_path.exists() or not seg_path.exists():
                 continue
 
             seg = _load_volume(str(seg_path))
@@ -72,7 +78,10 @@ def discover_lumiere_samples(
                     LumiereSample(
                         patient_id=patient_id,
                         week_id=week_dir.name,
-                        image_path=str(flair_path),
+                        flair_path=str(flair_path),
+                        t1_path=str(t1_path),
+                        t2_path=str(t2_path),
+                        ct1_path=str(ct1_path),
                         mask_path=str(seg_path),
                         slice_idx=slice_idx,
                     )
@@ -109,11 +118,13 @@ class LumiereSliceDataset(Dataset):
         image_size=256,
         augment=False,
         cache_volumes=False,
+        modalities=("flair",),
     ):
         self.samples = list(samples)
         self.image_size = image_size
         self.augment = augment
         self.cache_volumes = cache_volumes
+        self.modalities = tuple(modalities)
         self._volume_cache = {} if cache_volumes else None
 
     def __len__(self):
@@ -142,24 +153,33 @@ class LumiereSliceDataset(Dataset):
 
     def __getitem__(self, idx):
         sample = self.samples[idx]
-        image_vol = self._get_volume(sample.image_path)
+        volumes = {
+            "flair": self._get_volume(sample.flair_path),
+            "t1": self._get_volume(sample.t1_path),
+            "t2": self._get_volume(sample.t2_path),
+            "ct1": self._get_volume(sample.ct1_path),
+        }
         mask_vol = self._get_volume(sample.mask_path)
 
-        depth = min(image_vol.shape[2], mask_vol.shape[2])
+        selected_volumes = [volumes[name] for name in self.modalities]
+        depth = min([vol.shape[2] for vol in selected_volumes] + [mask_vol.shape[2]])
         slice_idx = min(sample.slice_idx, depth - 1)
 
-        image = _normalise_volume(image_vol[:, :, slice_idx])
+        image = [_normalise_volume(vol[:, :, slice_idx]) for vol in selected_volumes]
         mask = (mask_vol[:, :, slice_idx] > 0).astype(np.uint8)
 
-        if self.augment:
-            image, mask = self._augment(image, mask)
-
-        if image.shape != (self.image_size, self.image_size):
-            image = cv2.resize(image, (self.image_size, self.image_size), interpolation=cv2.INTER_LINEAR)
+        resized = []
+        for channel in image:
+            resized.append(cv2.resize(channel, (self.image_size, self.image_size), interpolation=cv2.INTER_LINEAR))
+        image = np.stack(resized, axis=0)
         if mask.shape != (self.image_size, self.image_size):
             mask = cv2.resize(mask, (self.image_size, self.image_size), interpolation=cv2.INTER_NEAREST)
 
-        image = torch.from_numpy(image).float().unsqueeze(0)
+        if self.augment:
+            image_hw, mask = self._augment(np.transpose(image, (1, 2, 0)), mask)
+            image = np.transpose(image_hw, (2, 0, 1))
+
+        image = torch.from_numpy(image).float()
         mask = torch.from_numpy(mask.astype(np.int64)).long()
 
         return image, mask
@@ -179,17 +199,19 @@ def build_lumiere_splits(data_root, seed=42, val_fraction=0.15, test_fraction=0.
 
 
 def load_lumiere_slice(sample, image_size=256):
-    image_vol = _load_volume(sample.image_path)
+    flair_vol = _load_volume(sample.flair_path)
     mask_vol = _load_volume(sample.mask_path)
 
-    depth = min(image_vol.shape[2], mask_vol.shape[2])
+    depth = min(flair_vol.shape[2], mask_vol.shape[2])
     slice_idx = min(sample.slice_idx, depth - 1)
 
-    image = _normalise_volume(image_vol[:, :, slice_idx])
+    image = [_normalise_volume(flair_vol[:, :, slice_idx])]
     mask = (mask_vol[:, :, slice_idx] > 0).astype(np.uint8)
 
-    if image.shape != (image_size, image_size):
-        image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
+    resized = []
+    for channel in image:
+        resized.append(cv2.resize(channel, (image_size, image_size), interpolation=cv2.INTER_LINEAR))
+    image = np.stack(resized, axis=0)
     if mask.shape != (image_size, image_size):
         mask = cv2.resize(mask, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
 

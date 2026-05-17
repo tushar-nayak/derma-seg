@@ -77,6 +77,7 @@ def make_png_loaders(args):
 
 
 def make_lumiere_loaders(args):
+    modalities = [m.strip().lower() for m in args.modalities.split(",") if m.strip()]
     train_samples, val_samples, test_samples = build_lumiere_splits(
         args.data_root,
         seed=args.seed,
@@ -89,9 +90,15 @@ def make_lumiere_loaders(args):
     val_samples = limit_samples(val_samples, args.max_val_samples, args.seed + 1)
     test_samples = limit_samples(test_samples, args.max_test_samples, args.seed + 2)
 
-    train_dataset = LumiereSliceDataset(train_samples, image_size=args.image_size, augment=True)
-    val_dataset = LumiereSliceDataset(val_samples, image_size=args.image_size, augment=False)
-    test_dataset = LumiereSliceDataset(test_samples, image_size=args.image_size, augment=False)
+    train_dataset = LumiereSliceDataset(
+        train_samples, image_size=args.image_size, augment=True, modalities=modalities
+    )
+    val_dataset = LumiereSliceDataset(
+        val_samples, image_size=args.image_size, augment=False, modalities=modalities
+    )
+    test_dataset = LumiereSliceDataset(
+        test_samples, image_size=args.image_size, augment=False, modalities=modalities
+    )
 
     loader_kwargs = dict(
         batch_size=args.batch_size,
@@ -173,11 +180,23 @@ def train(args):
     else:
         raise ValueError(f"Unknown dataset: {args.dataset}")
 
-    model = get_model(args.model, n_channels=1, n_classes=2, img_size=args.image_size).to(device)
+    if args.in_channels > 0:
+        in_channels = args.in_channels
+    elif args.dataset == "lumiere":
+        in_channels = len([m for m in args.modalities.split(",") if m.strip()])
+    else:
+        in_channels = 1
+    model = get_model(
+        args.model,
+        n_channels=in_channels,
+        n_classes=2,
+        img_size=args.image_size,
+        pretrained=args.pretrained,
+    ).to(device)
     criterion = CombinedSegmentationLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-    scaler = torch.cuda.amp.GradScaler() if device.type == "cuda" and args.amp else None
+    scaler = torch.amp.GradScaler("cuda") if device.type == "cuda" and args.amp else None
 
     run_dir = Path(args.output_dir) / args.dataset / args.model
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -257,6 +276,9 @@ def parse_args():
     parser.add_argument("--data_dir", type=str, default="data/lumiere_slices")
     parser.add_argument("--model", type=str, default="unet")
     parser.add_argument("--image_size", type=int, default=256)
+    parser.add_argument("--in_channels", type=int, default=0)
+    parser.add_argument("--modalities", type=str, default="flair")
+    parser.add_argument("--pretrained", action="store_true", default=False)
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--weight_decay", type=float, default=1e-4)

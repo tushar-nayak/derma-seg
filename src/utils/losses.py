@@ -30,17 +30,18 @@ class DiceLoss(nn.Module):
 
 
 class CombinedSegmentationLoss(nn.Module):
-    def __init__(self, ce_weight=1.0, dice_weight=1.0):
+    def __init__(self, ce_weight=0.5, dice_weight=2.0, class_weights=(0.1, 0.9)):
         super().__init__()
         self.ce_weight = ce_weight
         self.dice_weight = dice_weight
-        self.ce = nn.CrossEntropyLoss()
+        self.register_buffer("class_weights", torch.tensor(class_weights, dtype=torch.float32))
         self.dice = DiceLoss()
 
     def forward(self, logits, target):
         loss = 0.0
         if self.ce_weight:
-            loss = loss + self.ce_weight * self.ce(logits, target)
+            ce = F.cross_entropy(logits, target, weight=self.class_weights.to(logits.device))
+            loss = loss + self.ce_weight * ce
         if self.dice_weight:
             loss = loss + self.dice_weight * self.dice(logits, target)
         return loss
