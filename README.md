@@ -73,6 +73,8 @@ python scripts/evaluate_promptable.py --model sam --checkpoint /path/to/sam_chec
 
 Populate the table below only after running the benchmark on your machine.
 
+A reproducible smoke benchmark from bounded real-data runs is saved in [results/smoke_benchmark.md](./results/smoke_benchmark.md).
+
 | Model | Val Dice | Test Dice | Test IoU |
 | --- | ---: | ---: | ---: |
 | U-Net | TBD | TBD | TBD |

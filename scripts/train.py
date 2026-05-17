@@ -32,6 +32,15 @@ def unwrap_logits(outputs):
     return outputs
 
 
+def limit_samples(samples, max_count, seed):
+    if max_count is None or max_count <= 0 or len(samples) <= max_count:
+        return list(samples)
+    rng = np.random.default_rng(seed)
+    indices = rng.choice(len(samples), size=max_count, replace=False)
+    indices.sort()
+    return [samples[i] for i in indices]
+
+
 def make_png_loaders(args):
     dataset = MedicalDataset(args.data_dir, image_size=args.image_size)
     train_size = int(round(0.8 * len(dataset)))
@@ -75,6 +84,10 @@ def make_lumiere_loaders(args):
         test_fraction=args.test_fraction,
         positive_only=args.positive_only,
     )
+
+    train_samples = limit_samples(train_samples, args.max_train_samples, args.seed)
+    val_samples = limit_samples(val_samples, args.max_val_samples, args.seed + 1)
+    test_samples = limit_samples(test_samples, args.max_test_samples, args.seed + 2)
 
     train_dataset = LumiereSliceDataset(train_samples, image_size=args.image_size, augment=True)
     val_dataset = LumiereSliceDataset(val_samples, image_size=args.image_size, augment=False)
@@ -254,6 +267,9 @@ def parse_args():
     parser.add_argument("--output_dir", type=str, default="runs")
     parser.add_argument("--val_fraction", type=float, default=0.15)
     parser.add_argument("--test_fraction", type=float, default=0.15)
+    parser.add_argument("--max_train_samples", type=int, default=0)
+    parser.add_argument("--max_val_samples", type=int, default=0)
+    parser.add_argument("--max_test_samples", type=int, default=0)
     parser.add_argument("--positive_only", action="store_true", default=True)
     parser.add_argument("--no_positive_only", action="store_false", dest="positive_only")
     parser.add_argument("--amp", action="store_true", default=True)
