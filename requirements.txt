@@ -1,0 +1,12 @@
+torch
+torchvision
+timm
+numpy
+matplotlib
+scikit-learn
+tqdm
+h5py
+nibabel
+opencv-python
+albumentations
+wandb

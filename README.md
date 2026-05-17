@@ -1,0 +1,72 @@
+# Medical Image Segmentation Benchmark
+
+This repository is a 2D medical segmentation benchmark built around the LUMIERE glioblastoma dataset. It compares classic CNN segmentation baselines with a transformer-based encoder/decoder model on patient-level splits.
+
+## Models
+
+- U-Net
+- Attention U-Net
+- SegNet
+- U-Net++
+- DeepLabV3+
+- SwinUNetLite, a Swin Transformer encoder with a U-Net-style decoder
+
+## Dataset
+
+The main benchmark uses the local LUMIERE source data at:
+
+`/home/sofa/host_dir/hub/glioblastoma-evolution/data/lumiere`
+
+The training pipeline indexes FLAIR volumes and segmentation masks directly, then builds slice-level samples with patient-level train/val/test splits to avoid leakage.
+
+## Setup
+
+1. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+2. Train a model on LUMIERE:
+
+```bash
+python scripts/train.py --dataset lumiere --model unet
+```
+
+3. Try the transformer-based model:
+
+```bash
+python scripts/train.py --dataset lumiere --model swin_unet
+```
+
+4. Run the PNG fallback dataset if needed:
+
+```bash
+python scripts/train.py --dataset png --data_dir data/lumiere_slices --model deeplabv3
+```
+
+## What Changed
+
+- Patient-level splitting for the real dataset.
+- Correct Dice and IoU computation for 2-class segmentation.
+- Combined cross-entropy + Dice training loss.
+- A Swin-based segmentation model for transformer comparison.
+- Reproducible metric saving under `runs/<dataset>/<model>/metrics.json`.
+
+## Results
+
+Populate the table below only after running the benchmark on your machine.
+
+| Model | Val Dice | Test Dice | Test IoU |
+| --- | ---: | ---: | ---: |
+| U-Net | TBD | TBD | TBD |
+| Attention U-Net | TBD | TBD | TBD |
+| SegNet | TBD | TBD | TBD |
+| U-Net++ | TBD | TBD | TBD |
+| DeepLabV3+ | TBD | TBD | TBD |
+| SwinUNetLite | TBD | TBD | TBD |
+
+## Notes
+
+- The previous synthetic toy data is still present, but it is not the main benchmark.
+- The repository does not invent metrics. If you want publishable numbers, run the benchmark and commit the saved `metrics.json` files or summarize them in a results table.
