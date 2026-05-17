@@ -176,3 +176,21 @@ def build_lumiere_splits(data_root, seed=42, val_fraction=0.15, test_fraction=0.
     test_samples = [s for s in samples if s.patient_id in test_patients]
 
     return train_samples, val_samples, test_samples
+
+
+def load_lumiere_slice(sample, image_size=256):
+    image_vol = _load_volume(sample.image_path)
+    mask_vol = _load_volume(sample.mask_path)
+
+    depth = min(image_vol.shape[2], mask_vol.shape[2])
+    slice_idx = min(sample.slice_idx, depth - 1)
+
+    image = _normalise_volume(image_vol[:, :, slice_idx])
+    mask = (mask_vol[:, :, slice_idx] > 0).astype(np.uint8)
+
+    if image.shape != (image_size, image_size):
+        image = cv2.resize(image, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
+    if mask.shape != (image_size, image_size):
+        mask = cv2.resize(mask, (image_size, image_size), interpolation=cv2.INTER_NEAREST)
+
+    return image.astype(np.float32), mask.astype(np.uint8)

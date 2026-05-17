@@ -10,6 +10,14 @@ This repository is a 2D medical segmentation benchmark built around the LUMIERE 
 - U-Net++
 - DeepLabV3+
 - SwinUNetLite, a Swin Transformer encoder with a U-Net-style decoder
+- SegFormerLite, a SegFormer-style transformer baseline with a hierarchical encoder
+
+## Promptable Models
+
+- SAM
+- MedSAM
+
+These are evaluated separately from the supervised benchmark with ground-truth-derived prompts so the comparison stays explicit and reproducible.
 
 ## Dataset
 
@@ -45,12 +53,20 @@ python scripts/train.py --dataset lumiere --model swin_unet
 python scripts/train.py --dataset png --data_dir data/lumiere_slices --model deeplabv3
 ```
 
+5. Run a promptable SAM-style evaluation:
+
+```bash
+python scripts/evaluate_promptable.py --model sam --checkpoint /path/to/sam_checkpoint.pth
+```
+
 ## What Changed
 
 - Patient-level splitting for the real dataset.
 - Correct Dice and IoU computation for 2-class segmentation.
 - Combined cross-entropy + Dice training loss.
 - A Swin-based segmentation model for transformer comparison.
+- A SegFormer-style non-U-Net transformer baseline.
+- Optional SAM/MedSAM promptable evaluation with oracle box prompts.
 - Reproducible metric saving under `runs/<dataset>/<model>/metrics.json`.
 
 ## Results
@@ -65,8 +81,12 @@ Populate the table below only after running the benchmark on your machine.
 | U-Net++ | TBD | TBD | TBD |
 | DeepLabV3+ | TBD | TBD | TBD |
 | SwinUNetLite | TBD | TBD | TBD |
+| SegFormerLite | TBD | TBD | TBD |
+
+Promptable SAM/MedSAM results are saved separately under `runs/promptable/`.
 
 ## Notes
 
 - The previous synthetic toy data is still present, but it is not the main benchmark.
 - The repository does not invent metrics. If you want publishable numbers, run the benchmark and commit the saved `metrics.json` files or summarize them in a results table.
+- SAM and MedSAM need the optional `segment-anything` package and their respective checkpoints. Install the package separately before running `scripts/evaluate_promptable.py`.
