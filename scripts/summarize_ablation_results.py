@@ -18,7 +18,7 @@ def best_history_value(history, key):
 
 def collect_runs(root):
     rows = []
-    for metrics_path in sorted(Path(root).glob("*/metrics.json")):
+    for metrics_path in sorted(Path(root).glob("**/metrics.json")):
         with metrics_path.open("r", encoding="utf-8") as handle:
             payload = json.load(handle)
 
@@ -28,6 +28,7 @@ def collect_runs(root):
             "run_name": metrics_path.parent.name,
             "model": payload.get("model", "unknown"),
             "loss": payload.get("loss", "unknown"),
+            "lr": payload.get("history", [{}])[0].get("lr") if history else None,
             "best_val_dice": best_history_value(history, "val_dice"),
             "best_val_iou": best_history_value(history, "val_iou"),
             "best_val_tj": best_history_value(history, "val_threshold_jaccard"),
@@ -44,16 +45,17 @@ def write_markdown(rows, output_path, title):
     lines = [
         f"# {title}",
         "",
-        "| Run | Model | Loss | Best Val Dice | Best Val IoU | Best Val TJ | Test Dice | Test IoU | Test TJ |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Run | Model | Loss | LR | Best Val Dice | Best Val IoU | Best Val TJ | Test Dice | Test IoU | Test TJ |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
 
     for row in rows:
         lines.append(
-            "| {run_name} | {model} | {loss} | {best_val_dice} | {best_val_iou} | {best_val_tj} | {test_dice} | {test_iou} | {test_tj} |".format(
+            "| {run_name} | {model} | {loss} | {lr} | {best_val_dice} | {best_val_iou} | {best_val_tj} | {test_dice} | {test_iou} | {test_tj} |".format(
                 run_name=row["run_name"],
                 model=row["model"],
                 loss=row["loss"],
+                lr=format_metric(row["lr"]),
                 best_val_dice=format_metric(row["best_val_dice"]),
                 best_val_iou=format_metric(row["best_val_iou"]),
                 best_val_tj=format_metric(row["best_val_tj"]),
