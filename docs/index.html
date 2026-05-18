@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DermaSeg</title>
+    <meta
+      name="description"
+      content="DermaSeg is a medical image segmentation project built around ISIC 2018 lesion segmentation, featuring DeepLabV3, U-Net-family baselines, transformer models, and qualitative results from local experiments."
+    >
+    <link rel="stylesheet" href="styles.css?v=1">
+  </head>
+  <body>
+    <header>
+      <div class="wrap hero">
+        <p class="eyebrow">Medical Image Segmentation Project</p>
+        <h1>DermaSeg: Skin Lesion Segmentation on ISIC 2018</h1>
+        <p class="lead">
+          A project-driven medical segmentation repository built around real mask-supervised training, strong classical and transformer baselines, and reproducible local experiments on dermoscopic lesion images.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/tushar-nayak/derma-seg">View Repository</a>
+          <a class="button" href="https://github.com/tushar-nayak/derma-seg/blob/main/results/isic_experiments.md">Experiment Summary</a>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <b>0.8900</b>
+            <span>best validation Dice</span>
+          </div>
+          <div class="metric">
+            <b>0.8134</b>
+            <span>best validation IoU</span>
+          </div>
+          <div class="metric">
+            <b>0.7598</b>
+            <span>best validation threshold Jaccard</span>
+          </div>
+          <div class="metric">
+            <b>0.7320</b>
+            <span>final test threshold Jaccard</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div class="wrap">
+          <h2>Project Focus</h2>
+          <p class="section-intro">
+            DermaSeg is designed to show a serious medical imaging workflow rather than a single isolated notebook result.
+            The current project uses the official ISIC 2018 Task 1 lesion-boundary split and compares supervised segmentation
+            methods across different architectural families.
+          </p>
+          <div class="grid-2">
+            <div class="panel">
+              <h3>What the project demonstrates</h3>
+              <p>
+                Real mask-supervised medical segmentation on a public benchmark dataset, reproducible train/validation/test
+                runs, and a codebase that supports classic U-Net variants, non-U-Net CNN baselines, transformer models,
+                and promptable foundation-model extensions.
+              </p>
+            </div>
+            <div class="panel">
+              <h3>Why ISIC 2018</h3>
+              <p>
+                ISIC is a clean fit for this repository because it is a 2D RGB medical segmentation task with official lesion
+                masks, making it appropriate for DeepLabV3, U-Net-family models, and transformer-based image segmentation.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <h2>Current Result</h2>
+          <p class="section-intro">
+            The first completed project result is a pretrained DeepLabV3 run using the official ISIC train, validation, and test folders.
+            The numbers below come from a local run on this repository and are tracked in versioned result artifacts.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Best Val Dice</th>
+                  <th>Best Val IoU</th>
+                  <th>Best Val TJ</th>
+                  <th>Test Dice</th>
+                  <th>Test IoU</th>
+                  <th>Test TJ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="highlight">
+                  <td>DeepLabV3</td>
+                  <td>0.8900</td>
+                  <td>0.8134</td>
+                  <td>0.7598</td>
+                  <td>0.8782</td>
+                  <td>0.7991</td>
+                  <td>0.7320</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="caption">
+            Validation checkpoint selection uses threshold Jaccard for the ISIC task. This is a local project run, not a copied leaderboard submission.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <h2>DeepLabV3 Architecture</h2>
+          <p class="section-intro">
+            DeepLabV3 is the current strongest completed run in the repository. It was chosen as a serious non-U-Net baseline
+            for RGB medical segmentation rather than as a claim of reproducing the original ISIC challenge winners.
+          </p>
+          <div class="architecture">
+            <div class="arch-card">
+              <span class="arch-step">1</span>
+              <h3>Input Image</h3>
+              <p>
+                A `320 x 320` RGB dermoscopic image enters the network as a 3-channel lesion-segmentation sample.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">2</span>
+              <h3>ResNet-50 Backbone</h3>
+              <p>
+                A pretrained ResNet-50 extracts increasingly abstract spatial features. This gives the model strong visual priors
+                before any ISIC fine-tuning begins.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">3</span>
+              <h3>Atrous Feature Encoding</h3>
+              <p>
+                DeepLabV3 uses dilated convolutions so the receptive field expands without aggressively destroying feature-map resolution.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">4</span>
+              <h3>ASPP Context Module</h3>
+              <p>
+                The Atrous Spatial Pyramid Pooling block gathers lesion context at multiple scales, which helps with large, small,
+                smooth, and irregular lesion boundaries.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">5</span>
+              <h3>2-Class Segmentation Head</h3>
+              <p>
+                The project predicts `background` vs `lesion` logits, then trains them with combined cross-entropy and Dice loss.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">6</span>
+              <h3>Mask Prediction</h3>
+              <p>
+                The best checkpoint is selected by validation threshold Jaccard, then evaluated on the held-out ISIC test set.
+              </p>
+            </div>
+          </div>
+          <div class="grid-2 section-grid">
+            <div class="panel">
+              <h3>Why this model worked here</h3>
+              <p>
+                ISIC is a 2D RGB dataset, so DeepLabV3 matches the data shape naturally. The pretrained backbone helps transfer
+                low-level texture and boundary cues, while ASPP helps the network reason about lesion scale and contour structure.
+              </p>
+            </div>
+            <div class="panel">
+              <h3>Why it matters in the repo</h3>
+              <p>
+                The project is not limited to U-Net variants. DeepLabV3 provides a defensible non-U-Net CNN baseline, which makes
+                the repository stronger as a segmentation portfolio project.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <h2>Qualitative Results</h2>
+          <p class="section-intro">
+            These panels come from the saved DeepLabV3 checkpoint on the ISIC test split. Each image shows input, ground-truth
+            mask overlay, and predicted mask overlay for direct visual inspection.
+          </p>
+          <div class="gallery">
+            <figure class="panel image-frame">
+              <img src="assets/isic_deeplabv3_sample_001.png" alt="DeepLabV3 qualitative lesion segmentation sample 1">
+              <figcaption>DeepLabV3 qualitative example 1</figcaption>
+            </figure>
+            <figure class="panel image-frame">
+              <img src="assets/isic_deeplabv3_sample_002.png" alt="DeepLabV3 qualitative lesion segmentation sample 2">
+              <figcaption>DeepLabV3 qualitative example 2</figcaption>
+            </figure>
+            <figure class="panel image-frame">
+              <img src="assets/isic_deeplabv3_sample_003.png" alt="DeepLabV3 qualitative lesion segmentation sample 3">
+              <figcaption>DeepLabV3 qualitative example 3</figcaption>
+            </figure>
+            <figure class="panel image-frame">
+              <img src="assets/isic_deeplabv3_sample_004.png" alt="DeepLabV3 qualitative lesion segmentation sample 4">
+              <figcaption>DeepLabV3 qualitative example 4</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <h2>Model Coverage</h2>
+          <p class="section-intro">
+            DeepLabV3 is the first completed run, but the repository is structured for broader segmentation experiments.
+          </p>
+          <div class="grid-2">
+            <div class="panel">
+              <h3>Supervised models in the project</h3>
+              <ul class="clean-list">
+                <li>U-Net</li>
+                <li>Attention U-Net</li>
+                <li>SegNet</li>
+                <li>U-Net++</li>
+                <li>DeepLabV3</li>
+                <li>SwinUNetLite</li>
+                <li>SegFormerLite</li>
+              </ul>
+            </div>
+            <div class="panel">
+              <h3>Foundation-model extensions</h3>
+              <ul class="clean-list">
+                <li>SAM</li>
+                <li>MedSAM</li>
+                <li>Promptable evaluation script support</li>
+                <li>Qualitative and metric summaries tracked in-repo</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="wrap">
+          Built from the tracked ISIC project results in <code>results/isic_experiments.md</code> and the local DeepLabV3 run artifacts under <code>runs/isic/deeplabv3/</code>.
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>
