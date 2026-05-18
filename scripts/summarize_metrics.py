@@ -28,7 +28,7 @@ def format_value(value):
 
 def write_markdown(metrics, output_path):
     lines = [
-        "# ISIC Benchmark Results",
+        "# ISIC Experiment Summary",
         "",
         "| Model | Best Val Dice | Best Val IoU | Best Val TJ | Test Dice | Test IoU | Test TJ |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
@@ -56,7 +56,7 @@ def write_markdown(metrics, output_path):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--run_dir", default="runs/isic")
-    parser.add_argument("--output", default="results/isic_benchmark.md")
+    parser.add_argument("--output", default="results/isic_experiments.md")
     return parser.parse_args()
 
 
