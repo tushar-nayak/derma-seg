@@ -218,7 +218,19 @@ def train(args):
         img_size=args.image_size,
         pretrained=args.pretrained,
     ).to(device)
-    criterion = CombinedSegmentationLoss()
+    overlap_mode = {
+        "ce_dice": "dice",
+        "ce_tversky": "tversky",
+        "ce_focal_tversky": "focal_tversky",
+    }[args.loss]
+    criterion = CombinedSegmentationLoss(
+        ce_weight=args.ce_weight,
+        overlap_weight=args.overlap_weight,
+        overlap_mode=overlap_mode,
+        tversky_alpha=args.tversky_alpha,
+        tversky_beta=args.tversky_beta,
+        focal_tversky_gamma=args.focal_tversky_gamma,
+    )
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     scaler = torch.amp.GradScaler("cuda") if device.type == "cuda" and args.amp else None
@@ -287,6 +299,12 @@ def train(args):
         "dataset": args.dataset,
         "model": args.model,
         "seed": args.seed,
+        "loss": args.loss,
+        "ce_weight": args.ce_weight,
+        "overlap_weight": args.overlap_weight,
+        "tversky_alpha": args.tversky_alpha,
+        "tversky_beta": args.tversky_beta,
+        "focal_tversky_gamma": args.focal_tversky_gamma,
         "history": history,
         "monitor_metric": monitor_metric,
         "best_val_score": best_val_score,
@@ -314,6 +332,17 @@ def parse_args():
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
+    parser.add_argument(
+        "--loss",
+        type=str,
+        default="ce_dice",
+        choices=["ce_dice", "ce_tversky", "ce_focal_tversky"],
+    )
+    parser.add_argument("--ce_weight", type=float, default=0.5)
+    parser.add_argument("--overlap_weight", type=float, default=2.0)
+    parser.add_argument("--tversky_alpha", type=float, default=0.3)
+    parser.add_argument("--tversky_beta", type=float, default=0.7)
+    parser.add_argument("--focal_tversky_gamma", type=float, default=1.33)
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--patience", type=int, default=5)
     parser.add_argument("--seed", type=int, default=42)
