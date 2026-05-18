@@ -19,26 +19,39 @@ def _target_mask(target):
     raise ValueError(f"Expected [N, H, W] or [N, 1, H, W] target, got shape {tuple(target.shape)}")
 
 
+def _per_sample_iou(pred, target):
+    smooth = 1e-6
+    pred_flat = pred.reshape(pred.shape[0], -1).float()
+    target_flat = target.reshape(target.shape[0], -1).float()
+    intersection = (pred_flat * target_flat).sum(dim=1)
+    union = pred_flat.sum(dim=1) + target_flat.sum(dim=1) - intersection
+    return (intersection + smooth) / (union + smooth)
+
+
 def dice_coeff(logits, target):
     """Hard Dice score for binary foreground segmentation."""
-    smooth = 1e-6
     pred = _foreground_prediction(logits).float()
     target = _target_mask(target).float()
-
-    pred_flat = pred.reshape(-1)
-    target_flat = target.reshape(-1)
-    intersection = (pred_flat * target_flat).sum()
-    return (2.0 * intersection + smooth) / (pred_flat.sum() + target_flat.sum() + smooth)
+    pred_flat = pred.reshape(pred.shape[0], -1)
+    target_flat = target.reshape(target.shape[0], -1)
+    smooth = 1e-6
+    intersection = (pred_flat * target_flat).sum(dim=1)
+    score = (2.0 * intersection + smooth) / (pred_flat.sum(dim=1) + target_flat.sum(dim=1) + smooth)
+    return score.mean()
 
 
 def iou_score(logits, target):
     """Hard IoU score for binary foreground segmentation."""
-    smooth = 1e-6
     pred = _foreground_prediction(logits).float()
     target = _target_mask(target).float()
+    return _per_sample_iou(pred, target).mean()
 
-    pred_flat = pred.reshape(-1)
-    target_flat = target.reshape(-1)
-    intersection = (pred_flat * target_flat).sum()
-    union = pred_flat.sum() + target_flat.sum() - intersection
-    return (intersection + smooth) / (union + smooth)
+
+def threshold_jaccard(logits, target, threshold=0.65):
+    """
+    ISIC-style thresholded Jaccard score.
+
+    Returns 0 if the sample-level IoU is below the threshold.
+    """
+    jaccard = _per_sample_iou(_foreground_prediction(logits).float(), _target_mask(target).float())
+    return torch.where(jaccard < threshold, torch.zeros_like(jaccard), jaccard).mean()

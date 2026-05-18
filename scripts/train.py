@@ -13,10 +13,11 @@ from tqdm import tqdm
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from src.data.dataset import MedicalDataset
+from src.data.isic_dataset import build_isic_loaders
 from src.data.lumiere_dataset import LumiereSliceDataset, build_lumiere_splits, discover_lumiere_samples
 from src.models import get_model
 from src.utils.losses import CombinedSegmentationLoss
-from src.utils.metrics import dice_coeff, iou_score
+from src.utils.metrics import dice_coeff, iou_score, threshold_jaccard
 
 
 def set_seed(seed):
@@ -144,6 +145,7 @@ def evaluate(model, loader, criterion, device):
     total_loss = 0.0
     total_dice = 0.0
     total_iou = 0.0
+    total_tj = 0.0
 
     for images, masks in tqdm(loader, desc="eval", leave=False):
         images = images.to(device, non_blocking=True)
@@ -153,12 +155,14 @@ def evaluate(model, loader, criterion, device):
         total_loss += criterion(outputs, masks).item()
         total_dice += dice_coeff(outputs, masks).item()
         total_iou += iou_score(outputs, masks).item()
+        total_tj += threshold_jaccard(outputs, masks).item()
 
     denom = max(1, len(loader))
     return {
         "loss": total_loss / denom,
         "dice": total_dice / denom,
         "iou": total_iou / denom,
+        "threshold_jaccard": total_tj / denom,
     }
 
 
@@ -177,6 +181,14 @@ def train(args):
         train_loader, val_loader, test_loader = make_lumiere_loaders(args)
     elif args.dataset == "png":
         train_loader, val_loader, test_loader = make_png_loaders(args)
+    elif args.dataset == "isic":
+        train_loader, val_loader, test_loader = build_isic_loaders(
+            args.data_dir,
+            image_size=args.image_size,
+            batch_size=args.batch_size,
+            seed=args.seed,
+            num_workers=args.num_workers,
+        )
     else:
         raise ValueError(f"Unknown dataset: {args.dataset}")
 
@@ -184,6 +196,8 @@ def train(args):
         in_channels = args.in_channels
     elif args.dataset == "lumiere":
         in_channels = len([m for m in args.modalities.split(",") if m.strip()])
+    elif args.dataset == "isic":
+        in_channels = 3
     else:
         in_channels = 1
     model = get_model(
@@ -218,6 +232,7 @@ def train(args):
             "val_loss": val_metrics["loss"],
             "val_dice": val_metrics["dice"],
             "val_iou": val_metrics["iou"],
+            "val_threshold_jaccard": val_metrics["threshold_jaccard"],
             "lr": optimizer.param_groups[0]["lr"],
         }
         history.append(record)
@@ -227,7 +242,8 @@ def train(args):
             f"train_loss={train_loss:.4f} | "
             f"val_loss={val_metrics['loss']:.4f} | "
             f"val_dice={val_metrics['dice']:.4f} | "
-            f"val_iou={val_metrics['iou']:.4f}"
+            f"val_iou={val_metrics['iou']:.4f} | "
+            f"val_tj={val_metrics['threshold_jaccard']:.4f}"
         )
 
         torch.save({"model_state": model.state_dict(), "args": vars(args), "epoch": epoch}, last_path)
@@ -249,7 +265,8 @@ def train(args):
     test_metrics = evaluate(model, test_loader, criterion, device)
     print(
         f"Test | loss={test_metrics['loss']:.4f} | "
-        f"dice={test_metrics['dice']:.4f} | iou={test_metrics['iou']:.4f}"
+        f"dice={test_metrics['dice']:.4f} | iou={test_metrics['iou']:.4f} | "
+        f"tj={test_metrics['threshold_jaccard']:.4f}"
     )
 
     results = {
@@ -266,14 +283,14 @@ def train(args):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, default="lumiere", choices=["lumiere", "png"])
+    parser.add_argument("--dataset", type=str, default="isic", choices=["lumiere", "png", "isic"])
     parser.add_argument(
         "--data_root",
         type=str,
         default="/home/sofa/host_dir/hub/glioblastoma-evolution/data/lumiere",
         help="Root of the original LUMIERE dataset.",
     )
-    parser.add_argument("--data_dir", type=str, default="data/lumiere_slices")
+    parser.add_argument("--data_dir", type=str, default="data/isic2018")
     parser.add_argument("--model", type=str, default="unet")
     parser.add_argument("--image_size", type=int, default=256)
     parser.add_argument("--in_channels", type=int, default=0)

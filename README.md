@@ -1,6 +1,6 @@
 # Medical Image Segmentation Benchmark
 
-This repository is a 2D medical segmentation benchmark built around the LUMIERE glioblastoma dataset. It compares classic CNN segmentation baselines with a transformer-based encoder/decoder model on patient-level splits.
+This repository is a 2D medical segmentation benchmark built around the ISIC 2018 lesion segmentation dataset. It compares classic CNN segmentation baselines with a transformer-based encoder/decoder model on patient-level splits.
 
 ## Models
 
@@ -21,11 +21,19 @@ These are evaluated separately from the supervised benchmark with ground-truth-d
 
 ## Dataset
 
-The main benchmark uses the local LUMIERE source data at:
+The main benchmark now uses ISIC 2018, which provides dermoscopic lesion images and binary mask PNGs through the official challenge data page.
 
-`/home/sofa/host_dir/hub/glioblastoma-evolution/data/lumiere`
+Download the training images and masks from the official ISIC data page:
 
-The training pipeline indexes LUMIERE volumes and segmentation masks directly, then builds slice-level samples with patient-level train/val/test splits to avoid leakage.
+- [ISIC data page](https://challenge.isic-archive.com/data/)
+- [ISIC 2018 lesion segmentation task](https://challenge.isic-archive.com/landing/2018/45/)
+
+Place the files in one of these layouts:
+
+- `data/isic2018/images` and `data/isic2018/masks`
+- `data/isic2018/ISIC2018_Task1-2_Training_Input` and `data/isic2018/ISIC2018_Task1_Training_GroundTruth`
+
+Masks are expected to follow the `ISIC_<image_id>_segmentation.png` naming convention used by the challenge.
 
 ## Setup
 
@@ -35,16 +43,16 @@ The training pipeline indexes LUMIERE volumes and segmentation masks directly, t
 pip install -r requirements.txt
 ```
 
-2. Train a model on LUMIERE:
+2. Train a model on ISIC 2018:
 
 ```bash
-python scripts/train.py --dataset lumiere --modalities flair --model unet
+python scripts/train.py --dataset isic --model unet
 ```
 
 3. Try the transformer-based model:
 
 ```bash
-python scripts/train.py --dataset lumiere --modalities flair --model swin_unet --pretrained
+python scripts/train.py --dataset isic --model swin_unet --pretrained
 ```
 
 4. Run the PNG fallback dataset if needed:
@@ -53,28 +61,21 @@ python scripts/train.py --dataset lumiere --modalities flair --model swin_unet -
 python scripts/train.py --dataset png --data_dir data/lumiere_slices --model deeplabv3
 ```
 
-5. Run a promptable SAM-style evaluation:
-
-```bash
-python scripts/evaluate_promptable.py --model sam --checkpoint /path/to/sam_checkpoint.pth
-```
-
 ## What Changed
 
-- Patient-level splitting for the real dataset.
-- Correct Dice and IoU computation for 2-class segmentation.
-- Combined cross-entropy + Dice training loss.
+- Patient-level splitting for the medical datasets used in this repo.
+- Correct Dice, IoU, and ISIC threshold Jaccard computation for 2-class segmentation.
+- Combined cross-entropy + Dice training loss with foreground weighting.
 - A Swin-based segmentation model for transformer comparison.
 - A SegFormer-style non-U-Net transformer baseline.
 - Optional SAM/MedSAM promptable evaluation with oracle box prompts.
 - Reproducible metric saving under `runs/<dataset>/<model>/metrics.json`.
-- Final benchmark runs currently use FLAIR-only inputs for tractable full-dataset training; multimodal support remains available via `--modalities flair,t1,t2,ct1`.
 
 ## Results
 
 Populate the table below only after running the benchmark on your machine.
 
-A reproducible final benchmark from the full PNG cache run is saved in [results/final_benchmark.md](./results/final_benchmark.md). A smaller smoke benchmark is also preserved in [results/smoke_benchmark.md](./results/smoke_benchmark.md).
+Legacy benchmark summaries are preserved in [results/final_benchmark.md](./results/final_benchmark.md) and [results/smoke_benchmark.md](./results/smoke_benchmark.md). They do not replace running the current ISIC benchmark locally.
 
 | Model | Val Dice | Test Dice | Test IoU |
 | --- | ---: | ---: | ---: |
@@ -90,6 +91,6 @@ Promptable SAM/MedSAM results are saved separately under `runs/promptable/`.
 
 ## Notes
 
-- The previous synthetic toy data is still present, but it is not the main benchmark.
+- LUMIERE and the synthetic toy data are still present, but they are not the main benchmark.
 - The repository does not invent metrics. If you want publishable numbers, run the benchmark and commit the saved `metrics.json` files or summarize them in a results table.
 - SAM and MedSAM need the optional `segment-anything` package and their respective checkpoints. Install the package separately before running `scripts/evaluate_promptable.py`.
