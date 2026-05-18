@@ -20,6 +20,7 @@ The point of this repository is not just to train a single model. It is to build
 - SegNet
 - U-Net++
 - DeepLabV3
+- BA-DeepLabV3
 - SwinUNetLite
 - SegFormerLite
 
@@ -78,6 +79,12 @@ Train a stronger pretrained RGB baseline:
 python scripts/train.py --dataset isic --model deeplabv3 --pretrained
 ```
 
+Train the custom boundary-aware model:
+
+```bash
+python scripts/train.py --dataset isic --model ba_deeplabv3 --pretrained --loss ce_tversky
+```
+
 Train a transformer-based model:
 
 ```bash
@@ -110,6 +117,8 @@ For the current ISIC experiment, the project uses a supervised 2-class segmentat
 - model selection: best validation threshold Jaccard
 
 We used DeepLabV3 here because it gives the project a strong non-U-Net baseline. The version in this repo is the torchvision `deeplabv3_resnet50` architecture: a pretrained ResNet-50 encoder feeding a DeepLabV3 head with atrous convolutions and ASPP to capture multi-scale context. That is useful for skin lesions with irregular shapes and variable sizes, and it transfers well to ISIC because the dataset is 2D RGB and benefits from pretrained natural-image features.
+
+The repo also includes an experimental `BA-DeepLabV3` path built on the same `ResNet-50` family but extended with dynamic ASPP branch weighting, a dedicated boundary head, an uncertainty head, and a refinement decoder that fuses lesion-region and contour cues.
 
 ## Current Results
 

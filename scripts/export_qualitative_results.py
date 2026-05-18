@@ -18,6 +18,14 @@ from src.models import get_model
 from src.utils.metrics import iou_score
 
 
+def unwrap_logits(outputs):
+    if isinstance(outputs, dict):
+        return outputs["logits"]
+    if isinstance(outputs, (list, tuple)):
+        return outputs[-1]
+    return outputs
+
+
 def normalize_batch(images, pretrained):
     if not pretrained or images.shape[1] != 3:
         return images
@@ -66,7 +74,7 @@ def export_panels(args):
         for index, (images, masks) in enumerate(loader):
             images = images.to(device)
             masks = masks.to(device)
-            logits = model(normalize_batch(images, pretrained=args.pretrained))
+            logits = unwrap_logits(model(normalize_batch(images, pretrained=args.pretrained)))
             pred = logits.argmax(dim=1)
 
             score = iou_score(logits, masks).item()

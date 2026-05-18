@@ -28,6 +28,8 @@ def set_seed(seed):
 
 
 def unwrap_logits(outputs):
+    if isinstance(outputs, dict):
+        return outputs["logits"]
     if isinstance(outputs, (list, tuple)):
         return outputs[-1]
     return outputs
@@ -133,7 +135,7 @@ def train_one_epoch(model, loader, criterion, optimizer, scaler, device, dataset
 
         optimizer.zero_grad(set_to_none=True)
         with torch.autocast(device_type=device.type, enabled=scaler is not None):
-            outputs = unwrap_logits(model(images))
+            outputs = model(images)
             loss = criterion(outputs, masks)
 
         if scaler is not None:
@@ -161,12 +163,13 @@ def evaluate(model, loader, criterion, device, dataset, pretrained):
         images = images.to(device, non_blocking=True)
         masks = masks.to(device, non_blocking=True)
         images = normalize_batch(images, dataset, pretrained)
-        outputs = unwrap_logits(model(images))
+        outputs = model(images)
+        logits = unwrap_logits(outputs)
 
         total_loss += criterion(outputs, masks).item()
-        total_dice += dice_coeff(outputs, masks).item()
-        total_iou += iou_score(outputs, masks).item()
-        total_tj += threshold_jaccard(outputs, masks).item()
+        total_dice += dice_coeff(logits, masks).item()
+        total_iou += iou_score(logits, masks).item()
+        total_tj += threshold_jaccard(logits, masks).item()
 
     denom = max(1, len(loader))
     return {
@@ -230,6 +233,10 @@ def train(args):
         tversky_alpha=args.tversky_alpha,
         tversky_beta=args.tversky_beta,
         focal_tversky_gamma=args.focal_tversky_gamma,
+        coarse_weight=args.coarse_weight,
+        boundary_weight=args.boundary_weight,
+        uncertainty_weight=args.uncertainty_weight,
+        consistency_weight=args.consistency_weight,
     )
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
@@ -305,6 +312,10 @@ def train(args):
         "tversky_alpha": args.tversky_alpha,
         "tversky_beta": args.tversky_beta,
         "focal_tversky_gamma": args.focal_tversky_gamma,
+        "coarse_weight": args.coarse_weight,
+        "boundary_weight": args.boundary_weight,
+        "uncertainty_weight": args.uncertainty_weight,
+        "consistency_weight": args.consistency_weight,
         "history": history,
         "monitor_metric": monitor_metric,
         "best_val_score": best_val_score,
@@ -343,6 +354,10 @@ def parse_args():
     parser.add_argument("--tversky_alpha", type=float, default=0.3)
     parser.add_argument("--tversky_beta", type=float, default=0.7)
     parser.add_argument("--focal_tversky_gamma", type=float, default=1.33)
+    parser.add_argument("--coarse_weight", type=float, default=0.5)
+    parser.add_argument("--boundary_weight", type=float, default=0.3)
+    parser.add_argument("--uncertainty_weight", type=float, default=0.2)
+    parser.add_argument("--consistency_weight", type=float, default=0.2)
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--patience", type=int, default=5)
     parser.add_argument("--seed", type=int, default=42)
