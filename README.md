@@ -150,10 +150,3 @@ You can turn completed runs into a project summary with:
 ```bash
 python scripts/summarize_metrics.py
 ```
-
-## Notes
-
-- ISIC is the main project dataset now.
-- LUMIERE and synthetic data are still in the repo as side datasets and utilities, but they are not the primary project path.
-- Metrics include Dice, IoU, and thresholded Jaccard for ISIC-style evaluation.
-- Pretrained RGB models use ImageNet-normalized inputs during ISIC training.
