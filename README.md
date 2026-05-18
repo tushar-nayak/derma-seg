@@ -1,105 +1,127 @@
-# Medical Image Segmentation Benchmark
+# DermaSeg
 
-This repository is a 2D medical segmentation benchmark built around the ISIC 2018 lesion segmentation dataset. It compares classic CNN segmentation baselines with a transformer-based encoder/decoder model on patient-level splits.
+DermaSeg is a medical image segmentation project focused on skin lesion segmentation with deep learning. The project is built around the ISIC 2018 lesion segmentation task and is structured to show practical experimentation across classic CNNs, attention-based models, transformer-based models, and promptable foundation-model baselines.
 
-## Models
+## Project Goal
+
+The point of this repository is not just to train a single model. It is to build a serious segmentation project that shows:
+
+- supervised medical segmentation on a real dataset with ground-truth masks
+- comparison across multiple model families
+- reproducible training, validation, and test workflows
+- room for extensions such as SAM, MedSAM, and newer hybrid approaches
+
+## Methods Implemented
+
+### Supervised segmentation models
 
 - U-Net
 - Attention U-Net
 - SegNet
 - U-Net++
-- DeepLabV3+
-- SwinUNetLite, a Swin Transformer encoder with a U-Net-style decoder
-- SegFormerLite, a SegFormer-style transformer baseline with a hierarchical encoder
+- DeepLabV3
+- SwinUNetLite
+- SegFormerLite
 
-## Promptable Models
+### Promptable foundation-model track
 
 - SAM
 - MedSAM
 
-These are evaluated separately from the supervised benchmark with ground-truth-derived prompts so the comparison stays explicit and reproducible.
+The promptable models are kept separate from the supervised training track so the comparisons stay honest. They are useful here as project extensions, not as direct replacements for mask-supervised training.
 
 ## Dataset
 
-The main benchmark now uses ISIC 2018, which provides dermoscopic lesion images and binary mask PNGs through the official challenge data page.
+The main project dataset is ISIC 2018 Task 1 for lesion boundary segmentation.
 
-Download the training images and masks from the official ISIC data page:
+Official sources:
 
 - [ISIC data page](https://challenge.isic-archive.com/data/)
 - [ISIC 2018 lesion segmentation task](https://challenge.isic-archive.com/landing/2018/45/)
 
-Place the files in one of these layouts:
+Supported layouts:
 
 - `data/isic2018/images` and `data/isic2018/masks`
 - `data/isic2018/ISIC2018_Task1-2_Training_Input` and `data/isic2018/ISIC2018_Task1_Training_GroundTruth`
-- `data/isic2018/ISIC2018_Task1-2_Training_Input`, `data/isic2018/ISIC2018_Task1_Training_GroundTruth`, `data/isic2018/ISIC2018_Task1-2_Validation_Input`, `data/isic2018/ISIC2018_Task1_Validation_GroundTruth`, `data/isic2018/ISIC2018_Task1-2_Test_Input`, and `data/isic2018/ISIC2018_Task1_Test_GroundTruth`
+- the full official split with train, validation, and test folders
 
-Masks are expected to follow the `ISIC_<image_id>_segmentation.png` naming convention used by the challenge.
-If the official validation and test folders are present, the training pipeline uses that official split automatically.
+If the official validation and test folders are present, the training pipeline uses that split automatically.
 
-## Setup
+## Project Structure
 
-1. Install dependencies:
+- `scripts/train.py`: main training, validation, and test entrypoint
+- `scripts/evaluate_promptable.py`: SAM and MedSAM evaluation path
+- `scripts/summarize_metrics.py`: converts saved metrics into a Markdown summary
+- `src/data/`: dataset loaders and preparation utilities
+- `src/models/`: segmentation architectures
+- `src/utils/`: losses, metrics, and prompting helpers
+- `runs/`: checkpoints and metrics written by experiments
+- `results/`: summarized experiment outputs for the repo
+
+## Training Workflow
+
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Train a model on ISIC 2018:
+Train a baseline U-Net:
 
 ```bash
 python scripts/train.py --dataset isic --model unet
 ```
 
-3. Try the transformer-based model:
-
-```bash
-python scripts/train.py --dataset isic --model swin_unet --pretrained
-```
-
-4. Run a strong RGB baseline with pretrained weights:
+Train a stronger pretrained RGB baseline:
 
 ```bash
 python scripts/train.py --dataset isic --model deeplabv3 --pretrained
 ```
 
-5. Run the PNG fallback dataset if needed:
+Train a transformer-based model:
 
 ```bash
-python scripts/train.py --dataset png --data_dir data/lumiere_slices --model deeplabv3
+python scripts/train.py --dataset isic --model swin_unet --pretrained
 ```
 
-## What Changed
+Promptable evaluation:
 
-- Patient-level splitting for the medical datasets used in this repo.
-- Correct Dice, IoU, and ISIC threshold Jaccard computation for 2-class segmentation.
-- Combined cross-entropy + Dice training loss with foreground weighting.
-- Official ISIC split support with validation-based checkpoint selection on thresholded Jaccard.
-- A Swin-based segmentation model for transformer comparison.
-- A SegFormer-style non-U-Net transformer baseline.
-- Optional SAM/MedSAM promptable evaluation with oracle box prompts.
-- Reproducible metric saving under `runs/<dataset>/<model>/metrics.json`.
+```bash
+python scripts/evaluate_promptable.py --model sam --checkpoint /path/to/checkpoint.pth
+```
 
-## Results
+## Experiment Philosophy
 
-Populate the table below only after running the benchmark on your machine.
+This repository is organized like a real project rather than a one-off notebook dump. The focus is:
 
-Legacy benchmark summaries are preserved in [results/final_benchmark.md](./results/final_benchmark.md) and [results/smoke_benchmark.md](./results/smoke_benchmark.md). They do not replace running the current ISIC benchmark locally.
+- reproducible runs with saved checkpoints and metrics
+- comparing segmentation architectures on the same medical task
+- keeping classical supervised models and foundation-model experiments clearly separated
+- building a repo that can evolve into stronger experiments instead of freezing at a single result
 
-| Model | Val Dice | Test Dice | Test IoU |
-| --- | ---: | ---: | ---: |
-| U-Net | TBD | TBD | TBD |
-| Attention U-Net | TBD | TBD | TBD |
-| SegNet | TBD | TBD | TBD |
-| U-Net++ | TBD | TBD | TBD |
-| DeepLabV3+ | TBD | TBD | TBD |
-| SwinUNetLite | TBD | TBD | TBD |
-| SegFormerLite | TBD | TBD | TBD |
+## Outputs
 
-Promptable SAM/MedSAM results are saved separately under `runs/promptable/`.
+Each supervised run writes artifacts under:
+
+```text
+runs/<dataset>/<model>/
+```
+
+That directory contains:
+
+- `best.pt`
+- `last.pt`
+- `metrics.json`
+
+You can turn completed runs into a project summary with:
+
+```bash
+python scripts/summarize_metrics.py
+```
 
 ## Notes
 
-- LUMIERE and the synthetic toy data are still present, but they are not the main benchmark.
-- The repository does not invent metrics. If you want publishable numbers, run the benchmark and commit the saved `metrics.json` files or summarize them in a results table.
-- SAM and MedSAM need the optional `segment-anything` package and their respective checkpoints. Install the package separately before running `scripts/evaluate_promptable.py`.
+- ISIC is the main project dataset now.
+- LUMIERE and synthetic data are still in the repo as side datasets and utilities, but they are not the primary project path.
+- Metrics include Dice, IoU, and thresholded Jaccard for ISIC-style evaluation.
+- Pretrained RGB models use ImageNet-normalized inputs during ISIC training.
