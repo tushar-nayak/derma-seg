@@ -51,8 +51,10 @@ If the official validation and test folders are present, the training pipeline u
 ## Project Structure
 
 - `scripts/train.py`: main training, validation, and test entrypoint
+- `scripts/run_full_isic_ablation.sh`: one-command loss and learning-rate ablations
 - `scripts/evaluate_promptable.py`: SAM and MedSAM evaluation path
 - `scripts/summarize_metrics.py`: converts saved metrics into a Markdown summary
+- `scripts/summarize_ablation_results.py`: writes per-run ablation summaries
 - `src/data/`: dataset loaders and preparation utilities
 - `src/models/`: segmentation architectures
 - `src/utils/`: losses, metrics, and prompting helpers
@@ -83,6 +85,12 @@ Train the custom boundary-aware model:
 
 ```bash
 python scripts/train.py --dataset isic --model ba_deeplabv3 --pretrained --loss ce_tversky
+```
+
+Run the full DeepLabV3 and BA-DeepLabV3 ablation suite:
+
+```bash
+./scripts/run_full_isic_ablation.sh
 ```
 
 Train a transformer-based model:
@@ -120,6 +128,16 @@ We used DeepLabV3 here because it gives the project a strong non-U-Net baseline.
 
 The repo also includes an experimental `BA-DeepLabV3` path built on the same `ResNet-50` family but extended with dynamic ASPP branch weighting, a dedicated boundary head, an uncertainty head, and a refinement decoder that fuses lesion-region and contour cues.
 
+### BA-DeepLabV3 design
+
+- encoder: dilated `ResNet-50`
+- context module: `dynamic ASPP` with learnable branch weighting
+- outputs: `coarse mask logits`, `refined mask logits`, `boundary logits`, `uncertainty logits`
+- refinement path: fuses low-level encoder features with coarse region, contour, and uncertainty cues
+- training objective: `CE + Dice/Tversky/Focal Tversky` on masks, plus `boundary BCE`, uncertainty supervision, and contour-consistency loss
+
+This is the repo's main custom model path. The point is not just to add another named architecture, but to test whether boundary-aware and uncertainty-aware supervision improves lesion segmentation beyond the plain `deeplabv3_resnet50` baseline.
+
 ## Current Results
 
 The first completed ISIC experiment is a pretrained `DeepLabV3` run using a ResNet-50 backbone and ASPP head on the official ISIC 2018 split.
@@ -132,6 +150,13 @@ The first completed ISIC experiment is a pretrained `DeepLabV3` run using a ResN
 - test threshold Jaccard: `0.7320`
 
 This gives the repo one real completed medical-segmentation result from a local run, not a copied leaderboard number. A short experiment summary is saved in `results/isic_experiments.md`.
+
+The current ablation workflow now covers both `deeplabv3` and `ba_deeplabv3` across:
+
+- loss ablations: `ce_dice`, `ce_tversky`, `ce_focal_tversky`
+- learning-rate ablations with fixed `ce_tversky`
+
+Those runs write to `runs/ablations/`, and the saved summaries are written under `results/ablations/`.
 
 ### Qualitative Examples
 
@@ -158,4 +183,10 @@ You can turn completed runs into a project summary with:
 
 ```bash
 python scripts/summarize_metrics.py
+```
+
+For the full ablation suite, use:
+
+```bash
+python scripts/summarize_ablation_results.py --root runs/ablations/deeplabv3_loss_ablation --markdown_output results/ablations/deeplabv3_loss_ablation.md --json_output results/ablations/deeplabv3_loss_ablation.json
 ```

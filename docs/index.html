@@ -6,7 +6,7 @@
     <title>DermaSeg: Skin Lesion Segmentation</title>
     <meta
       name="description"
-      content="DermaSeg is a medical image segmentation project built around ISIC 2018 lesion segmentation, featuring a ResNet-50-backed DeepLabV3 with ASPP, U-Net-family baselines, transformer models, and qualitative results from local experiments."
+      content="DermaSeg is a medical image segmentation project built around ISIC 2018 lesion segmentation, featuring ResNet-50-backed DeepLabV3 baselines, a custom boundary-aware BA-DeepLabV3, transformer models, and tracked ablation experiments."
     >
     <link rel="stylesheet" href="styles.css?v=1">
   </head>
@@ -16,7 +16,7 @@
         <p class="eyebrow">Medical Image Segmentation Project</p>
         <h1>DermaSeg: Skin Lesion Segmentation</h1>
         <p class="lead">
-          A medical image segmentation project for ISIC 2018 skin lesion boundary segmentation, centered on a ResNet-50-backed DeepLabV3 with ASPP and supported by U-Net variants, transformer-based segmentation models, and promptable SAM/MedSAM baselines.
+          A medical image segmentation project for ISIC 2018 skin lesion boundary segmentation, centered on ResNet-50-backed DeepLabV3 baselines and a custom BA-DeepLabV3 with dynamic ASPP, boundary supervision, and uncertainty-aware refinement.
         </p>
         <div class="actions">
           <a class="button primary" href="https://github.com/tushar-nayak/derma-seg">View Repository</a>
@@ -44,6 +44,67 @@
     </header>
 
     <main>
+      <section>
+        <div class="wrap">
+          <h2>Custom Model Path</h2>
+          <p class="section-intro">
+            The repo now goes beyond plain torchvision DeepLabV3. The main custom architecture is BA-DeepLabV3,
+            a boundary-aware extension designed specifically to test whether region, contour, and uncertainty cues
+            improve lesion segmentation on ISIC.
+          </p>
+          <div class="architecture">
+            <div class="arch-card">
+              <span class="arch-step">1</span>
+              <h3>Dilated ResNet-50 Encoder</h3>
+              <p>
+                BA-DeepLabV3 keeps the ResNet-50 encoder family but uses a dilated backbone so high-level features
+                retain more spatial detail than a plain classification network.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">2</span>
+              <h3>Dynamic ASPP</h3>
+              <p>
+                Instead of treating ASPP branches equally, the model learns image-dependent branch weights so it can
+                emphasize the dilation scales that best fit each lesion.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">3</span>
+              <h3>Dual Region and Boundary Heads</h3>
+              <p>
+                The network predicts coarse lesion logits and explicit boundary logits, making contour supervision a
+                first-class part of training rather than an afterthought.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">4</span>
+              <h3>Uncertainty Head</h3>
+              <p>
+                A dedicated uncertainty branch highlights ambiguous pixels, especially around lesion borders where the
+                segmentation task is hardest.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">5</span>
+              <h3>Refinement Decoder</h3>
+              <p>
+                Low-level encoder features are fused with region, contour, and uncertainty cues to refine the final
+                lesion mask at full image resolution.
+              </p>
+            </div>
+            <div class="arch-card">
+              <span class="arch-step">6</span>
+              <h3>Contour-Aware Loss</h3>
+              <p>
+                Training combines overlap loss, boundary BCE, uncertainty supervision, and contour consistency to test
+                whether medically relevant edge information can improve the baseline.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section>
         <div class="wrap">
           <h2>Project Focus</h2>
@@ -244,9 +305,40 @@
         </div>
       </section>
 
+      <section>
+        <div class="wrap">
+          <h2>Ablation Workflow</h2>
+          <p class="section-intro">
+            The current experiment harness now tracks both architecture and optimization choices rather than a single
+            hand-picked run.
+          </p>
+          <div class="grid-2">
+            <div class="panel">
+              <h3>Loss ablations</h3>
+              <ul class="clean-list">
+                <li>DeepLabV3: `ce_dice`, `ce_tversky`, `ce_focal_tversky`</li>
+                <li>BA-DeepLabV3: `ce_dice`, `ce_tversky`, `ce_focal_tversky`</li>
+              </ul>
+            </div>
+            <div class="panel">
+              <h3>Learning-rate ablations</h3>
+              <ul class="clean-list">
+                <li>DeepLabV3 with fixed `ce_tversky`</li>
+                <li>BA-DeepLabV3 with fixed `ce_tversky`</li>
+                <li>Default sweep: `1e-4`, `3e-4`, `1e-3`</li>
+              </ul>
+            </div>
+          </div>
+          <p class="caption">
+            The one-command runner is <code>scripts/run_full_isic_ablation.sh</code>. Run artifacts are written to
+            <code>runs/ablations/</code> and saved summaries are written to <code>results/ablations/</code>.
+          </p>
+        </div>
+      </section>
+
       <footer class="footer">
         <div class="wrap">
-          Built from the tracked ISIC project results in <code>results/isic_experiments.md</code> and the local DeepLabV3 run artifacts under <code>runs/isic/deeplabv3/</code>.
+          Built from the tracked ISIC project results in <code>results/isic_experiments.md</code>, the custom BA-DeepLabV3 implementation in <code>src/models/ba_deeplabv3.py</code>, and ablation outputs under <code>runs/ablations/</code>.
         </div>
       </footer>
     </main>

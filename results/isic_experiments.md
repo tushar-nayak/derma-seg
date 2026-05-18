@@ -12,6 +12,26 @@ Current completed run:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | deeplabv3 | 0.8900 | 0.8134 | 0.7598 | 0.8782 | 0.7991 | 0.7320 |
 
+## Ongoing Ablation Work
+
+The repo now includes two deeper experiment tracks built on top of this baseline:
+
+- `deeplabv3` loss ablation: `ce_dice`, `ce_tversky`, `ce_focal_tversky`
+- `ba_deeplabv3` loss ablation: `ce_dice`, `ce_tversky`, `ce_focal_tversky`
+- `deeplabv3` learning-rate ablation with fixed `ce_tversky`
+- `ba_deeplabv3` learning-rate ablation with fixed `ce_tversky`
+
+These runs are launched through:
+
+```bash
+./scripts/run_full_isic_ablation.sh
+```
+
+Saved outputs:
+
+- run artifacts: `runs/ablations/`
+- summaries: `results/ablations/`
+
 ## Qualitative Results
 
 Each panel shows:
