@@ -76,15 +76,17 @@ h3 {
 h1 {
   max-width: 940px;
   font-size: clamp(2.4rem, 6.1vw, 5.15rem);
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 500;
+  font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.04em;
 }
 
 h2 {
   margin-bottom: 16px;
   font-size: clamp(1.8rem, 3vw, 2.8rem);
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 500;
+  font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 h3 {
