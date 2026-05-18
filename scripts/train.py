@@ -33,6 +33,15 @@ def unwrap_logits(outputs):
     return outputs
 
 
+def normalize_batch(images, dataset, pretrained):
+    if not pretrained or dataset != "isic" or images.shape[1] != 3:
+        return images
+
+    mean = torch.tensor([0.485, 0.456, 0.406], device=images.device).view(1, 3, 1, 1)
+    std = torch.tensor([0.229, 0.224, 0.225], device=images.device).view(1, 3, 1, 1)
+    return (images - mean) / std
+
+
 def limit_samples(samples, max_count, seed):
     if max_count is None or max_count <= 0 or len(samples) <= max_count:
         return list(samples)
@@ -113,13 +122,14 @@ def make_lumiere_loaders(args):
     return train_loader, val_loader, test_loader
 
 
-def train_one_epoch(model, loader, criterion, optimizer, scaler, device):
+def train_one_epoch(model, loader, criterion, optimizer, scaler, device, dataset, pretrained):
     model.train()
     running_loss = 0.0
 
     for images, masks in tqdm(loader, desc="train", leave=False):
         images = images.to(device, non_blocking=True)
         masks = masks.to(device, non_blocking=True)
+        images = normalize_batch(images, dataset, pretrained)
 
         optimizer.zero_grad(set_to_none=True)
         with torch.autocast(device_type=device.type, enabled=scaler is not None):
@@ -140,7 +150,7 @@ def train_one_epoch(model, loader, criterion, optimizer, scaler, device):
 
 
 @torch.no_grad()
-def evaluate(model, loader, criterion, device):
+def evaluate(model, loader, criterion, device, dataset, pretrained):
     model.eval()
     total_loss = 0.0
     total_dice = 0.0
@@ -150,6 +160,7 @@ def evaluate(model, loader, criterion, device):
     for images, masks in tqdm(loader, desc="eval", leave=False):
         images = images.to(device, non_blocking=True)
         masks = masks.to(device, non_blocking=True)
+        images = normalize_batch(images, dataset, pretrained)
         outputs = unwrap_logits(model(images))
 
         total_loss += criterion(outputs, masks).item()
@@ -223,8 +234,10 @@ def train(args):
     patience_left = args.patience
 
     for epoch in range(1, args.epochs + 1):
-        train_loss = train_one_epoch(model, train_loader, criterion, optimizer, scaler, device)
-        val_metrics = evaluate(model, val_loader, criterion, device)
+        train_loss = train_one_epoch(
+            model, train_loader, criterion, optimizer, scaler, device, args.dataset, args.pretrained
+        )
+        val_metrics = evaluate(model, val_loader, criterion, device, args.dataset, args.pretrained)
         scheduler.step()
 
         record = {
@@ -263,7 +276,7 @@ def train(args):
         checkpoint = torch.load(best_path, map_location=device)
         model.load_state_dict(checkpoint["model_state"])
 
-    test_metrics = evaluate(model, test_loader, criterion, device)
+    test_metrics = evaluate(model, test_loader, criterion, device, args.dataset, args.pretrained)
     print(
         f"Test | loss={test_metrics['loss']:.4f} | "
         f"dice={test_metrics['dice']:.4f} | iou={test_metrics['iou']:.4f} | "
