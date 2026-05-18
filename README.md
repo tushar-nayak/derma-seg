@@ -104,16 +104,16 @@ This repository is organized like a real project rather than a one-off notebook 
 For the current ISIC experiment, the project uses a supervised 2-class segmentation setup: lesion vs background.
 
 - dataset: official ISIC 2018 Task 1 split
-- model: `DeepLabV3` with a pretrained `ResNet-50` backbone
+- model: `DeepLabV3` with a `ResNet-50` backbone and ASPP segmentation head
 - input: RGB dermoscopic images resized to `320 x 320`
 - loss: combined cross-entropy and Dice loss
 - model selection: best validation threshold Jaccard
 
-We used DeepLabV3 here because it gives the project a strong non-U-Net baseline. Instead of a U-Net-style encoder-decoder with skip connections, DeepLabV3 uses atrous convolutions and ASPP to capture multi-scale context, which is useful for skin lesions with irregular shapes and variable sizes. It also transfers well to ISIC because the dataset is 2D RGB and benefits from pretrained natural-image features.
+We used DeepLabV3 here because it gives the project a strong non-U-Net baseline. The version in this repo is the torchvision `deeplabv3_resnet50` architecture: a pretrained ResNet-50 encoder feeding a DeepLabV3 head with atrous convolutions and ASPP to capture multi-scale context. That is useful for skin lesions with irregular shapes and variable sizes, and it transfers well to ISIC because the dataset is 2D RGB and benefits from pretrained natural-image features.
 
 ## Current Results
 
-The first completed ISIC experiment is a pretrained `DeepLabV3` run on the official ISIC 2018 split.
+The first completed ISIC experiment is a pretrained `DeepLabV3` run using a ResNet-50 backbone and ASPP head on the official ISIC 2018 split.
 
 - best validation Dice: `0.8900`
 - best validation IoU: `0.8134`

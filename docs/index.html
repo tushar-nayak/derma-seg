@@ -6,7 +6,7 @@
     <title>DermaSeg: Skin Lesion Segmentation</title>
     <meta
       name="description"
-      content="DermaSeg is a medical image segmentation project built around ISIC 2018 lesion segmentation, featuring DeepLabV3, U-Net-family baselines, transformer models, and qualitative results from local experiments."
+      content="DermaSeg is a medical image segmentation project built around ISIC 2018 lesion segmentation, featuring a ResNet-50-backed DeepLabV3 with ASPP, U-Net-family baselines, transformer models, and qualitative results from local experiments."
     >
     <link rel="stylesheet" href="styles.css?v=1">
   </head>
@@ -16,7 +16,7 @@
         <p class="eyebrow">Medical Image Segmentation Project</p>
         <h1>DermaSeg: Skin Lesion Segmentation</h1>
         <p class="lead">
-          A medical image segmentation project for ISIC 2018 skin lesion boundary segmentation, centered on DeepLabV3 and supported by U-Net variants, transformer-based segmentation models, and promptable SAM/MedSAM baselines.
+          A medical image segmentation project for ISIC 2018 skin lesion boundary segmentation, centered on a ResNet-50-backed DeepLabV3 with ASPP and supported by U-Net variants, transformer-based segmentation models, and promptable SAM/MedSAM baselines.
         </p>
         <div class="actions">
           <a class="button primary" href="https://github.com/tushar-nayak/derma-seg">View Repository</a>
@@ -76,7 +76,7 @@
         <div class="wrap">
           <h2>Current Result</h2>
           <p class="section-intro">
-            The first completed project result is a pretrained DeepLabV3 run using the official ISIC train, validation, and test folders.
+            The first completed project result is a pretrained DeepLabV3 run using a ResNet-50 backbone and ASPP head on the official ISIC train, validation, and test folders.
             The numbers below come from a local run on this repository and are tracked in versioned result artifacts.
           </p>
           <div class="table-wrap">
@@ -130,8 +130,8 @@
               <span class="arch-step">2</span>
               <h3>ResNet-50 Backbone</h3>
               <p>
-                A pretrained ResNet-50 extracts increasingly abstract spatial features. This gives the model strong visual priors
-                before any ISIC fine-tuning begins.
+                A pretrained ResNet-50 extracts increasingly abstract spatial features. In this repo, it serves as the encoder
+                inside torchvision's `deeplabv3_resnet50` implementation, giving the model strong visual priors before any ISIC fine-tuning begins.
               </p>
             </div>
             <div class="arch-card">
@@ -168,8 +168,8 @@
             <div class="panel">
               <h3>Why this model worked here</h3>
               <p>
-                ISIC is a 2D RGB dataset, so DeepLabV3 matches the data shape naturally. The pretrained backbone helps transfer
-                low-level texture and boundary cues, while ASPP helps the network reason about lesion scale and contour structure.
+                ISIC is a 2D RGB dataset, so DeepLabV3 matches the data shape naturally. The pretrained ResNet-50 backbone helps
+                transfer low-level texture and boundary cues, while ASPP helps the network reason about lesion scale and contour structure.
               </p>
             </div>
             <div class="panel">
