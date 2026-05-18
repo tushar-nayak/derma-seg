@@ -128,8 +128,9 @@ We used DeepLabV3 here because it gives the project a strong non-U-Net baseline.
 
 The repo also includes an experimental `BA-DeepLabV3` path built on the same `ResNet-50` family but extended with dynamic ASPP branch weighting, a dedicated boundary head, an uncertainty head, and a refinement decoder that fuses lesion-region and contour cues.
 
-### BA-DeepLabV3 design
+### Customized Boundary-Aware DeepLabV3+ResNet50
 
+- The current working model now goes beyond plain torchvision DeepLabV3. The main custom architecture is BA-DeepLabV3, a boundary-aware extension designed specifically to test whether region, contour, and uncertainty cues improve lesion segmentation on ISIC.
 - encoder: dilated `ResNet-50`
 - context module: `dynamic ASPP` with learnable branch weighting
 - outputs: `coarse mask logits`, `refined mask logits`, `boundary logits`, `uncertainty logits`
