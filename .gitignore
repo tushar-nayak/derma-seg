@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+/checkpoints/
+/runs/
+/runs_smoke/
+/runs_final_png/
+/data/
