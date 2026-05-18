@@ -32,8 +32,10 @@ Place the files in one of these layouts:
 
 - `data/isic2018/images` and `data/isic2018/masks`
 - `data/isic2018/ISIC2018_Task1-2_Training_Input` and `data/isic2018/ISIC2018_Task1_Training_GroundTruth`
+- `data/isic2018/ISIC2018_Task1-2_Training_Input`, `data/isic2018/ISIC2018_Task1_Training_GroundTruth`, `data/isic2018/ISIC2018_Task1-2_Validation_Input`, `data/isic2018/ISIC2018_Task1_Validation_GroundTruth`, `data/isic2018/ISIC2018_Task1-2_Test_Input`, and `data/isic2018/ISIC2018_Task1_Test_GroundTruth`
 
 Masks are expected to follow the `ISIC_<image_id>_segmentation.png` naming convention used by the challenge.
+If the official validation and test folders are present, the training pipeline uses that official split automatically.
 
 ## Setup
 
@@ -55,7 +57,13 @@ python scripts/train.py --dataset isic --model unet
 python scripts/train.py --dataset isic --model swin_unet --pretrained
 ```
 
-4. Run the PNG fallback dataset if needed:
+4. Run a strong RGB baseline with pretrained weights:
+
+```bash
+python scripts/train.py --dataset isic --model deeplabv3 --pretrained
+```
+
+5. Run the PNG fallback dataset if needed:
 
 ```bash
 python scripts/train.py --dataset png --data_dir data/lumiere_slices --model deeplabv3
@@ -66,6 +74,7 @@ python scripts/train.py --dataset png --data_dir data/lumiere_slices --model dee
 - Patient-level splitting for the medical datasets used in this repo.
 - Correct Dice, IoU, and ISIC threshold Jaccard computation for 2-class segmentation.
 - Combined cross-entropy + Dice training loss with foreground weighting.
+- Official ISIC split support with validation-based checkpoint selection on thresholded Jaccard.
 - A Swin-based segmentation model for transformer comparison.
 - A SegFormer-style non-U-Net transformer baseline.
 - Optional SAM/MedSAM promptable evaluation with oracle box prompts.

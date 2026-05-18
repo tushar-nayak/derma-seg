@@ -17,7 +17,7 @@ def get_model(model_name, n_channels=1, n_classes=2, img_size=256, pretrained=Fa
     elif model_name == 'unet++' or model_name == 'unetplusplus':
         return UNetPlusPlus(n_channels, n_classes)
     elif model_name == 'deeplabv3':
-        return DeepLabV3Wrapper(n_channels, n_classes)
+        return DeepLabV3Wrapper(n_channels, n_classes, pretrained=pretrained)
     elif model_name in {'swin_unet', 'swinunet', 'swin_unet_lite'}:
         return SwinUNetLite(n_channels, n_classes, pretrained=pretrained, img_size=img_size)
     elif model_name in {'segformer', 'segformer_lite'}:

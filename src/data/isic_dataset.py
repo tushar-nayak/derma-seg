@@ -3,7 +3,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
-from torch.utils.data import Dataset, Subset
+from torch.utils.data import DataLoader, Dataset, Subset
 
 
 def _resolve_dir(base, candidates):
@@ -18,6 +18,7 @@ def _mask_path_for(image_path, masks_dir):
     stem = image_path.stem
     candidates = [
         masks_dir / f"{stem}_segmentation.png",
+        masks_dir / f"{stem}_Segmentation.png",
         masks_dir / f"{stem}.png",
     ]
     for candidate in candidates:
@@ -50,16 +51,16 @@ class ISICSegmentationDataset(Dataset):
     - <root>/train_images + <root>/train_masks
     """
 
-    def __init__(self, data_dir, image_size=224, augment=False):
+    def __init__(self, data_dir, image_size=224, augment=False, images_dir=None, masks_dir=None):
         self.data_dir = Path(data_dir)
         self.image_size = image_size
         self.augment = augment
 
-        self.images_dir = _resolve_dir(
+        self.images_dir = Path(images_dir) if images_dir is not None else _resolve_dir(
             self.data_dir,
             ["images", "train_images", "ISIC2018_Task1-2_Training_Input", "training_images"],
         )
-        self.masks_dir = _resolve_dir(
+        self.masks_dir = Path(masks_dir) if masks_dir is not None else _resolve_dir(
             self.data_dir,
             ["masks", "train_masks", "ISIC2018_Task1_Training_GroundTruth", "training_masks"],
         )
@@ -106,7 +107,69 @@ class ISICSegmentationDataset(Dataset):
         return image, mask
 
 
+def _build_subset_loader(dataset, indices, batch_size, shuffle, num_workers):
+    return DataLoader(
+        Subset(dataset, indices),
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers,
+        pin_memory=torch.cuda.is_available(),
+    )
+
+
+def _official_dir_pairs(base_dir):
+    return {
+        "train": (
+            base_dir / "ISIC2018_Task1-2_Training_Input",
+            base_dir / "ISIC2018_Task1_Training_GroundTruth",
+        ),
+        "val": (
+            base_dir / "ISIC2018_Task1-2_Validation_Input",
+            base_dir / "ISIC2018_Task1_Validation_GroundTruth",
+        ),
+        "test": (
+            base_dir / "ISIC2018_Task1-2_Test_Input",
+            base_dir / "ISIC2018_Task1_Test_GroundTruth",
+        ),
+    }
+
+
+def _all_exist(paths):
+    return all(path.exists() for path in paths)
+
+
 def build_isic_loaders(data_dir, image_size=224, batch_size=16, seed=42, num_workers=0):
+    data_dir = Path(data_dir)
+    official_pairs = _official_dir_pairs(data_dir)
+    if all(_all_exist(pair) for pair in official_pairs.values()):
+        train_dataset = ISICSegmentationDataset(
+            data_dir,
+            image_size=image_size,
+            augment=True,
+            images_dir=official_pairs["train"][0],
+            masks_dir=official_pairs["train"][1],
+        )
+        val_dataset = ISICSegmentationDataset(
+            data_dir,
+            image_size=image_size,
+            augment=False,
+            images_dir=official_pairs["val"][0],
+            masks_dir=official_pairs["val"][1],
+        )
+        test_dataset = ISICSegmentationDataset(
+            data_dir,
+            image_size=image_size,
+            augment=False,
+            images_dir=official_pairs["test"][0],
+            masks_dir=official_pairs["test"][1],
+        )
+
+        loader_kwargs = dict(batch_size=batch_size, num_workers=num_workers, pin_memory=torch.cuda.is_available())
+        train_loader = DataLoader(train_dataset, shuffle=True, **loader_kwargs)
+        val_loader = DataLoader(val_dataset, shuffle=False, **loader_kwargs)
+        test_loader = DataLoader(test_dataset, shuffle=False, **loader_kwargs)
+        return train_loader, val_loader, test_loader
+
     base_dataset = ISICSegmentationDataset(data_dir, image_size=image_size, augment=False)
     n_samples = len(base_dataset)
     train_size = int(round(0.8 * n_samples))
@@ -121,12 +184,25 @@ def build_isic_loaders(data_dir, image_size=224, batch_size=16, seed=42, num_wor
     val_idx = indices[train_size:train_size + val_size]
     test_idx = indices[train_size + val_size:]
 
-    train_dataset = Subset(ISICSegmentationDataset(data_dir, image_size=image_size, augment=True), train_idx)
-    val_dataset = Subset(ISICSegmentationDataset(data_dir, image_size=image_size, augment=False), val_idx)
-    test_dataset = Subset(ISICSegmentationDataset(data_dir, image_size=image_size, augment=False), test_idx)
-
-    loader_kwargs = dict(batch_size=batch_size, num_workers=num_workers, pin_memory=torch.cuda.is_available())
-    train_loader = torch.utils.data.DataLoader(train_dataset, shuffle=True, **loader_kwargs)
-    val_loader = torch.utils.data.DataLoader(val_dataset, shuffle=False, **loader_kwargs)
-    test_loader = torch.utils.data.DataLoader(test_dataset, shuffle=False, **loader_kwargs)
+    train_loader = _build_subset_loader(
+        ISICSegmentationDataset(data_dir, image_size=image_size, augment=True),
+        train_idx,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+    )
+    val_loader = _build_subset_loader(
+        ISICSegmentationDataset(data_dir, image_size=image_size, augment=False),
+        val_idx,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+    )
+    test_loader = _build_subset_loader(
+        ISICSegmentationDataset(data_dir, image_size=image_size, augment=False),
+        test_idx,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+    )
     return train_loader, val_loader, test_loader

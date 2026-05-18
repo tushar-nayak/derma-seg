@@ -217,7 +217,8 @@ def train(args):
     best_path = run_dir / "best.pt"
     last_path = run_dir / "last.pt"
 
-    best_val_dice = -1.0
+    monitor_metric = "threshold_jaccard" if args.dataset == "isic" else "dice"
+    best_val_score = -1.0
     history = []
     patience_left = args.patience
 
@@ -248,8 +249,8 @@ def train(args):
 
         torch.save({"model_state": model.state_dict(), "args": vars(args), "epoch": epoch}, last_path)
 
-        if val_metrics["dice"] > best_val_dice:
-            best_val_dice = val_metrics["dice"]
+        if val_metrics[monitor_metric] > best_val_score:
+            best_val_score = val_metrics[monitor_metric]
             torch.save({"model_state": model.state_dict(), "args": vars(args), "epoch": epoch}, best_path)
             patience_left = args.patience
         else:
@@ -274,7 +275,8 @@ def train(args):
         "model": args.model,
         "seed": args.seed,
         "history": history,
-        "best_val_dice": best_val_dice,
+        "monitor_metric": monitor_metric,
+        "best_val_score": best_val_score,
         "test": test_metrics,
     }
     save_metrics(run_dir / "metrics.json", results)
