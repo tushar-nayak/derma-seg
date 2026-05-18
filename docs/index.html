@@ -48,7 +48,7 @@
         <div class="wrap">
           <h2>Customized Boundary-Aware DeepLabV3+ResNet50</h2>
           <p class="section-intro">
-            The current working model now goes beyond plain torchvision DeepLabV3. The main custom architecture is BA-DeepLabV3, a boundary-aware extension designed specifically to test whether region, contour, and uncertainty cues improve lesion segmentation on ISIC.
+            The current working model now goes beyond plain torchvision DeepLabV3. The main custom architecture is BA-DeepLabV3, a boundary-aware extension used as a research probe to test how region, contour, and uncertainty cues change lesion segmentation behavior on ISIC.
           </p>
           <div class="architecture">
             <div class="arch-card">
@@ -95,8 +95,8 @@
               <span class="arch-step">6</span>
               <h3>Contour-Aware Loss</h3>
               <p>
-                Training combines overlap loss, boundary BCE, uncertainty supervision, and contour consistency to test
-                whether medically relevant edge information can improve the baseline.
+                Training combines overlap loss, boundary BCE, uncertainty supervision, and contour consistency to study
+                whether medically relevant edge information changes the baseline behavior.
               </p>
             </div>
           </div>
@@ -308,7 +308,9 @@
           <h2>Ablation Workflow</h2>
           <p class="section-intro">
             The current experiment harness now tracks both architecture and optimization choices rather than a single
-            hand-picked run.
+            hand-picked run. The completed sweep is being treated as a discovery study, not just a benchmark: the plain
+            DeepLabV3 baseline stayed strongest, while the boundary-aware and Tversky-family variants exposed how sensitive
+            lesion segmentation is to loss choice and contour supervision.
           </p>
           <div class="grid-2">
             <div class="panel">

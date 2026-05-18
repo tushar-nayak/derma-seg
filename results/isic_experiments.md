@@ -32,6 +32,8 @@ Saved outputs:
 - run artifacts: `runs/ablations/`
 - summaries: `results/ablations/`
 
+The research takeaway from the completed sweep is that the boundary-aware and Tversky-family runs are useful as controlled experiments on contour sensitivity, even though the plain `DeepLabV3 + CE+Dice` baseline remained the strongest completed configuration in this pass.
+
 ## Qualitative Results
 
 Each panel shows:

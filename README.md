@@ -130,14 +130,14 @@ The repo also includes an experimental `BA-DeepLabV3` path built on the same `Re
 
 ### Customized Boundary-Aware DeepLabV3+ResNet50
 
-- The current working model now goes beyond plain torchvision DeepLabV3. The main custom architecture is BA-DeepLabV3, a boundary-aware extension designed specifically to test whether region, contour, and uncertainty cues improve lesion segmentation on ISIC.
+- The current working model now goes beyond plain torchvision DeepLabV3. The main custom architecture is BA-DeepLabV3, a boundary-aware extension used as a research probe to test how region, contour, and uncertainty cues change lesion segmentation behavior on ISIC.
 - encoder: dilated `ResNet-50`
 - context module: `dynamic ASPP` with learnable branch weighting
 - outputs: `coarse mask logits`, `refined mask logits`, `boundary logits`, `uncertainty logits`
 - refinement path: fuses low-level encoder features with coarse region, contour, and uncertainty cues
 - training objective: `CE + Dice/Tversky/Focal Tversky` on masks, plus `boundary BCE`, uncertainty supervision, and contour-consistency loss
 
-This is the repo's main custom model path. The point is not just to add another named architecture, but to test whether boundary-aware and uncertainty-aware supervision improves lesion segmentation beyond the plain `deeplabv3_resnet50` baseline.
+This is the repo's main custom model path. The point is not just to add another named architecture, but to study how boundary-aware and uncertainty-aware supervision shifts lesion boundary prediction on this dataset, even when the baseline remains stronger on the current sweep.
 
 ## Current Results
 
@@ -157,7 +157,7 @@ The current ablation workflow now covers both `deeplabv3` and `ba_deeplabv3` acr
 - loss ablations: `ce_dice`, `ce_tversky`, `ce_focal_tversky`
 - learning-rate ablations with fixed `ce_tversky`
 
-Those runs write to `runs/ablations/`, and the saved summaries are written under `results/ablations/`.
+Those runs write to `runs/ablations/`, and the saved summaries are written under `results/ablations/`. The main takeaway so far is a research one: `DeepLabV3 + CE+Dice` stayed strongest in the completed baseline sweep, while the boundary-aware variants exposed how sensitive lesion segmentation is to loss choice and contour supervision.
 
 ### Qualitative Examples
 
