@@ -124,6 +124,13 @@ The first completed ISIC experiment is a pretrained `DeepLabV3` run on the offic
 
 This gives the repo one real completed medical-segmentation result from a local run, not a copied leaderboard number. A short experiment summary is saved in `results/isic_experiments.md`.
 
+### Qualitative Examples
+
+The panels below show input image, ground-truth mask overlay, and predicted mask overlay from the saved `DeepLabV3` checkpoint on the ISIC test split.
+
+![DeepLabV3 qualitative sample 1](results/figures/isic_deeplabv3_sample_001.png)
+![DeepLabV3 qualitative sample 2](results/figures/isic_deeplabv3_sample_002.png)
+
 ## Outputs
 
 Each supervised run writes artifacts under:
