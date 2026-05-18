@@ -89,6 +89,10 @@ run_lr_sweep() {
   local summary_name="$4"
 
   for lr_value in $LR_VALUES; do
+    if [[ "$lr_value" == "$LR" ]]; then
+      echo "Skipping duplicate LR sweep run for model=$model loss=$loss_name lr=$lr_value"
+      continue
+    fi
     local run_name
     run_name="$(printf 'lr_%s' "$lr_value" | tr '.' 'p')"
     run_train "$model" "$loss_name" "$root_dir/$run_name" "$lr_value"
