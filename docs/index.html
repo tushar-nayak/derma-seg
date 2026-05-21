@@ -272,6 +272,34 @@
 
       <section>
         <div class="wrap">
+          <h2>Boundary-Aware Qualitative Results</h2>
+          <p class="section-intro">
+            The best custom-model checkpoint, `BA-DeepLabV3 + CE+Tversky + lr=1e-3`, also has exported panels for direct visual
+            comparison against the baseline. These examples make the custom model visible as more than just a table row.
+          </p>
+          <div class="gallery">
+            <figure class="panel image-frame">
+              <img src="assets/isic_ba_deeplabv3_sample_001.png" alt="BA-DeepLabV3 qualitative lesion segmentation sample 1">
+              <figcaption>BA-DeepLabV3 qualitative example 1</figcaption>
+            </figure>
+            <figure class="panel image-frame">
+              <img src="assets/isic_ba_deeplabv3_sample_003.png" alt="BA-DeepLabV3 qualitative lesion segmentation sample 3">
+              <figcaption>BA-DeepLabV3 qualitative example 3</figcaption>
+            </figure>
+            <figure class="panel image-frame">
+              <img src="assets/isic_ba_deeplabv3_sample_004.png" alt="BA-DeepLabV3 qualitative lesion segmentation sample 4">
+              <figcaption>BA-DeepLabV3 qualitative example 4</figcaption>
+            </figure>
+            <figure class="panel image-frame">
+              <img src="assets/isic_ba_deeplabv3_sample_005.png" alt="BA-DeepLabV3 qualitative lesion segmentation sample 5">
+              <figcaption>BA-DeepLabV3 qualitative example 5</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
           <h2>Model Coverage</h2>
           <p class="section-intro">
             DeepLabV3 is the first completed run, but the repository is structured for broader segmentation experiments.
@@ -362,6 +390,10 @@
               </tbody>
             </table>
           </div>
+          <p class="caption">
+            A second runner, <code>scripts/run_ba_component_ablation.sh</code>, isolates the boundary head and uncertainty head
+            on top of the best `BA-DeepLabV3 + CE+Tversky + lr=1e-3` setting.
+          </p>
         </div>
       </section>
 

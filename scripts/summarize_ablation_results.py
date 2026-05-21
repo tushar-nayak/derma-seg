@@ -29,6 +29,8 @@ def collect_runs(root):
             "model": payload.get("model", "unknown"),
             "loss": payload.get("loss", "unknown"),
             "lr": payload.get("history", [{}])[0].get("lr") if history else None,
+            "use_boundary_head": payload.get("use_boundary_head", True),
+            "use_uncertainty_head": payload.get("use_uncertainty_head", True),
             "best_val_dice": best_history_value(history, "val_dice"),
             "best_val_iou": best_history_value(history, "val_iou"),
             "best_val_tj": best_history_value(history, "val_threshold_jaccard"),
@@ -45,17 +47,19 @@ def write_markdown(rows, output_path, title):
     lines = [
         f"# {title}",
         "",
-        "| Run | Model | Loss | LR | Best Val Dice | Best Val IoU | Best Val TJ | Test Dice | Test IoU | Test TJ |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Run | Model | Loss | LR | Boundary | Uncertainty | Best Val Dice | Best Val IoU | Best Val TJ | Test Dice | Test IoU | Test TJ |",
+        "| --- | --- | --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
 
     for row in rows:
         lines.append(
-            "| {run_name} | {model} | {loss} | {lr} | {best_val_dice} | {best_val_iou} | {best_val_tj} | {test_dice} | {test_iou} | {test_tj} |".format(
+            "| {run_name} | {model} | {loss} | {lr} | {boundary} | {uncertainty} | {best_val_dice} | {best_val_iou} | {best_val_tj} | {test_dice} | {test_iou} | {test_tj} |".format(
                 run_name=row["run_name"],
                 model=row["model"],
                 loss=row["loss"],
                 lr=format_metric(row["lr"]),
+                boundary="on" if row["use_boundary_head"] else "off",
+                uncertainty="on" if row["use_uncertainty_head"] else "off",
                 best_val_dice=format_metric(row["best_val_dice"]),
                 best_val_iou=format_metric(row["best_val_iou"]),
                 best_val_tj=format_metric(row["best_val_tj"]),

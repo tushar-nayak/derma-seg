@@ -220,6 +220,8 @@ def train(args):
         n_classes=2,
         img_size=args.image_size,
         pretrained=args.pretrained,
+        use_boundary_head=args.use_boundary_head,
+        use_uncertainty_head=args.use_uncertainty_head,
     ).to(device)
     overlap_mode = {
         "ce_dice": "dice",
@@ -316,6 +318,8 @@ def train(args):
         "boundary_weight": args.boundary_weight,
         "uncertainty_weight": args.uncertainty_weight,
         "consistency_weight": args.consistency_weight,
+        "use_boundary_head": args.use_boundary_head,
+        "use_uncertainty_head": args.use_uncertainty_head,
         "history": history,
         "monitor_metric": monitor_metric,
         "best_val_score": best_val_score,
@@ -358,6 +362,10 @@ def parse_args():
     parser.add_argument("--boundary_weight", type=float, default=0.3)
     parser.add_argument("--uncertainty_weight", type=float, default=0.2)
     parser.add_argument("--consistency_weight", type=float, default=0.2)
+    parser.add_argument("--use_boundary_head", action="store_true", default=True)
+    parser.add_argument("--no_boundary_head", action="store_false", dest="use_boundary_head")
+    parser.add_argument("--use_uncertainty_head", action="store_true", default=True)
+    parser.add_argument("--no_uncertainty_head", action="store_false", dest="use_uncertainty_head")
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--patience", type=int, default=5)
     parser.add_argument("--seed", type=int, default=42)

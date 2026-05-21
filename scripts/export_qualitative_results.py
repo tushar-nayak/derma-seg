@@ -62,6 +62,8 @@ def export_panels(args):
         n_classes=2,
         img_size=train_args.get("image_size", args.image_size),
         pretrained=False,
+        use_boundary_head=train_args.get("use_boundary_head", True),
+        use_uncertainty_head=train_args.get("use_uncertainty_head", True),
     ).to(device)
     model.load_state_dict(checkpoint["model_state"])
     model.eval()
@@ -99,7 +101,8 @@ def export_panels(args):
                 axis.axis("off")
             fig.tight_layout()
 
-            out_path = output_dir / f"isic_deeplabv3_sample_{index:03d}.png"
+            prefix = args.output_prefix or train_args.get("model", args.model)
+            out_path = output_dir / f"isic_{prefix}_sample_{index:03d}.png"
             fig.savefig(out_path, dpi=160, bbox_inches="tight")
             plt.close(fig)
 
@@ -122,6 +125,7 @@ def parse_args():
     parser.add_argument("--image_size", type=int, default=320)
     parser.add_argument("--num_samples", type=int, default=4)
     parser.add_argument("--min_iou", type=float, default=0.75)
+    parser.add_argument("--output_prefix", default="")
     parser.add_argument("--pretrained", action="store_true", default=True)
     parser.add_argument("--no_pretrained", action="store_false", dest="pretrained")
     return parser.parse_args()

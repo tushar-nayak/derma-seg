@@ -49,6 +49,30 @@ Full saved summaries:
 - `results/ablations/ba_deeplabv3_lr_ablation.md`
 - `results/ablations/combined_isic_ablation.md`
 
+## Boundary-Aware Qualitative Results
+
+The custom `BA-DeepLabV3 + CE+Tversky + lr=1e-3` run also has exported qualitative panels for direct visual comparison against the baseline.
+
+![BA-DeepLabV3 sample 1](figures/isic_ba_deeplabv3_sample_001.png)
+![BA-DeepLabV3 sample 3](figures/isic_ba_deeplabv3_sample_003.png)
+![BA-DeepLabV3 sample 4](figures/isic_ba_deeplabv3_sample_004.png)
+![BA-DeepLabV3 sample 5](figures/isic_ba_deeplabv3_sample_005.png)
+
+## Component Ablation
+
+A dedicated component-ablation runner now exists for the best boundary-aware setting:
+
+```bash
+./scripts/run_ba_component_ablation.sh
+```
+
+It evaluates:
+
+- full `BA-DeepLabV3`
+- `BA-DeepLabV3` without the uncertainty head
+- `BA-DeepLabV3` without the boundary head
+- `BA-DeepLabV3` without both heads
+
 ## Qualitative Results
 
 Each panel shows:

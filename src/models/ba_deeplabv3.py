@@ -94,12 +94,22 @@ class BoundaryRefinementDecoder(nn.Module):
         coarse_logits = F.interpolate(
             coarse_logits, size=low_level.shape[-2:], mode="bilinear", align_corners=False
         )
-        boundary_logits = F.interpolate(
-            boundary_logits, size=low_level.shape[-2:], mode="bilinear", align_corners=False
-        )
-        uncertainty_logits = F.interpolate(
-            uncertainty_logits, size=low_level.shape[-2:], mode="bilinear", align_corners=False
-        )
+        if boundary_logits is None:
+            boundary_logits = torch.zeros(
+                coarse_logits.shape[0], 1, low_level.shape[-2], low_level.shape[-1], device=coarse_logits.device
+            )
+        else:
+            boundary_logits = F.interpolate(
+                boundary_logits, size=low_level.shape[-2:], mode="bilinear", align_corners=False
+            )
+        if uncertainty_logits is None:
+            uncertainty_logits = torch.zeros(
+                coarse_logits.shape[0], 1, low_level.shape[-2], low_level.shape[-1], device=coarse_logits.device
+            )
+        else:
+            uncertainty_logits = F.interpolate(
+                uncertainty_logits, size=low_level.shape[-2:], mode="bilinear", align_corners=False
+            )
         coarse_prob = _foreground_probability(coarse_logits)
         boundary_prob = torch.sigmoid(boundary_logits)
         uncertainty_prob = torch.sigmoid(uncertainty_logits)
@@ -122,8 +132,17 @@ class BoundaryAwareDeepLabV3(nn.Module):
     - low-level encoder features
     """
 
-    def __init__(self, n_channels=3, n_classes=2, pretrained=False):
+    def __init__(
+        self,
+        n_channels=3,
+        n_classes=2,
+        pretrained=False,
+        use_boundary_head=True,
+        use_uncertainty_head=True,
+    ):
         super().__init__()
+        self.use_boundary_head = use_boundary_head
+        self.use_uncertainty_head = use_uncertainty_head
         weights = ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
         self.encoder = resnet50(weights=weights, replace_stride_with_dilation=[False, True, True])
         self._adapt_input_channels(n_channels, pretrained)
@@ -184,8 +203,8 @@ class BoundaryAwareDeepLabV3(nn.Module):
 
         context, branch_weights = self.context(high_level)
         coarse_logits = self.coarse_head(context)
-        boundary_logits = self.boundary_head(context)
-        uncertainty_logits = self.uncertainty_head(context)
+        boundary_logits = self.boundary_head(context) if self.use_boundary_head else None
+        uncertainty_logits = self.uncertainty_head(context) if self.use_uncertainty_head else None
         refined_logits = self.refinement(
             context,
             low_level,
@@ -196,10 +215,12 @@ class BoundaryAwareDeepLabV3(nn.Module):
 
         refined_logits = F.interpolate(refined_logits, size=input_size, mode="bilinear", align_corners=False)
         coarse_logits = F.interpolate(coarse_logits, size=input_size, mode="bilinear", align_corners=False)
-        boundary_logits = F.interpolate(boundary_logits, size=input_size, mode="bilinear", align_corners=False)
-        uncertainty_logits = F.interpolate(
-            uncertainty_logits, size=input_size, mode="bilinear", align_corners=False
-        )
+        if boundary_logits is not None:
+            boundary_logits = F.interpolate(boundary_logits, size=input_size, mode="bilinear", align_corners=False)
+        if uncertainty_logits is not None:
+            uncertainty_logits = F.interpolate(
+                uncertainty_logits, size=input_size, mode="bilinear", align_corners=False
+            )
 
         return {
             "logits": refined_logits,

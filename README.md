@@ -52,6 +52,7 @@ If the official validation and test folders are present, the training pipeline u
 
 - `scripts/train.py`: main training, validation, and test entrypoint
 - `scripts/run_full_isic_ablation.sh`: one-command loss and learning-rate ablations
+- `scripts/run_ba_component_ablation.sh`: isolates boundary and uncertainty contributions in `BA-DeepLabV3`
 - `scripts/evaluate_promptable.py`: SAM and MedSAM evaluation path
 - `scripts/summarize_metrics.py`: converts saved metrics into a Markdown summary
 - `scripts/summarize_ablation_results.py`: writes per-run ablation summaries
@@ -91,6 +92,12 @@ Run the full DeepLabV3 and BA-DeepLabV3 ablation suite:
 
 ```bash
 ./scripts/run_full_isic_ablation.sh
+```
+
+Run the `BA-DeepLabV3` component ablation:
+
+```bash
+./scripts/run_ba_component_ablation.sh
 ```
 
 Train a transformer-based model:
@@ -179,6 +186,11 @@ The panels below show input image, ground-truth mask overlay, and predicted mask
 
 ![DeepLabV3 qualitative sample 1](results/figures/isic_deeplabv3_sample_001.png)
 ![DeepLabV3 qualitative sample 2](results/figures/isic_deeplabv3_sample_002.png)
+
+The best boundary-aware checkpoint also has exported qualitative panels from the `BA-DeepLabV3 + CE+Tversky + lr=1e-3` run.
+
+![BA-DeepLabV3 qualitative sample 1](results/figures/isic_ba_deeplabv3_sample_001.png)
+![BA-DeepLabV3 qualitative sample 3](results/figures/isic_ba_deeplabv3_sample_003.png)
 
 ## Outputs
 
