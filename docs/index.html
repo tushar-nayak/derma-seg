@@ -135,8 +135,8 @@
         <div class="wrap">
           <h2>Current Result</h2>
           <p class="section-intro">
-            The first completed project result is a pretrained DeepLabV3 run using a ResNet-50 backbone and ASPP head on the official ISIC train, validation, and test folders.
-            The numbers below come from a local run on this repository and are tracked in versioned result artifacts.
+            The strongest completed project result remains a pretrained DeepLabV3 run using a ResNet-50 backbone and ASPP head on the official ISIC train, validation, and test folders.
+            The numbers below come from local tracked runs in this repository.
           </p>
           <div class="table-wrap">
             <table>
@@ -333,6 +333,35 @@
             The one-command runner is <code>scripts/run_full_isic_ablation.sh</code>. Run artifacts are written to
             <code>runs/ablations/</code> and saved summaries are written to <code>results/ablations/</code>.
           </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Track</th>
+                  <th>Best Configuration</th>
+                  <th>Test Dice</th>
+                  <th>Test IoU</th>
+                  <th>Test TJ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Baseline</td>
+                  <td>DeepLabV3 + CE+Dice</td>
+                  <td>0.8749</td>
+                  <td>0.7946</td>
+                  <td>0.7375</td>
+                </tr>
+                <tr>
+                  <td>Boundary-aware</td>
+                  <td>BA-DeepLabV3 + CE+Tversky + lr=1e-3</td>
+                  <td>0.8603</td>
+                  <td>0.7707</td>
+                  <td>0.6978</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

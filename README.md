@@ -141,7 +141,7 @@ This is the repo's main custom model path. The point is not just to add another 
 
 ## Current Results
 
-The first completed ISIC experiment is a pretrained `DeepLabV3` run using a ResNet-50 backbone and ASPP head on the official ISIC 2018 split.
+The strongest completed ISIC experiment remains a pretrained `DeepLabV3` run using a ResNet-50 backbone and ASPP head on the official ISIC 2018 split.
 
 - best validation Dice: `0.8900`
 - best validation IoU: `0.8134`
@@ -157,7 +157,21 @@ The current ablation workflow now covers both `deeplabv3` and `ba_deeplabv3` acr
 - loss ablations: `ce_dice`, `ce_tversky`, `ce_focal_tversky`
 - learning-rate ablations with fixed `ce_tversky`
 
-Those runs write to `runs/ablations/`, and the saved summaries are written under `results/ablations/`. The main takeaway so far is a research one: `DeepLabV3 + CE+Dice` stayed strongest in the completed baseline sweep, while the boundary-aware variants exposed how sensitive lesion segmentation is to loss choice and contour supervision.
+Those runs write to `runs/ablations/`, and the saved summaries are written under `results/ablations/`. The completed sweep showed that `DeepLabV3 + CE+Dice` stayed strongest overall, while the boundary-aware variants exposed how sensitive lesion segmentation is to loss choice, learning rate, and contour supervision.
+
+### Completed ablation findings
+
+- best baseline run: `DeepLabV3 + CE+Dice`, test Dice `0.8749`, IoU `0.7946`, threshold Jaccard `0.7375`
+- best boundary-aware run: `BA-DeepLabV3 + CE+Tversky + lr=1e-3`, test Dice `0.8603`, IoU `0.7707`, threshold Jaccard `0.6978`
+- strongest research takeaway: explicit boundary and uncertainty supervision changed optimization behavior meaningfully, but did not outperform the simpler DeepLabV3 baseline on this ISIC sweep
+
+Saved ablation summaries:
+
+- `results/ablations/deeplabv3_loss_ablation.md`
+- `results/ablations/ba_deeplabv3_loss_ablation.md`
+- `results/ablations/deeplabv3_lr_ablation.md`
+- `results/ablations/ba_deeplabv3_lr_ablation.md`
+- `results/ablations/combined_isic_ablation.md`
 
 ### Qualitative Examples
 

@@ -1,0 +1,28 @@
+[
+  {
+    "run_name": "ba_deeplabv3",
+    "model": "ba_deeplabv3",
+    "loss": "ce_tversky",
+    "lr": 0.000996057350657239,
+    "best_val_dice": 0.8619935247633193,
+    "best_val_iou": 0.7710618310504489,
+    "best_val_tj": 0.7035408814748129,
+    "test_dice": 0.8602588056098848,
+    "test_iou": 0.7706943388496127,
+    "test_tj": 0.6977800340169952,
+    "metrics_path": "runs/ablations/ba_deeplabv3_lr_ablation/lr_1e-3/isic/ba_deeplabv3/metrics.json"
+  },
+  {
+    "run_name": "ba_deeplabv3",
+    "model": "ba_deeplabv3",
+    "loss": "ce_tversky",
+    "lr": 9.96057350657239e-05,
+    "best_val_dice": 0.8617075946595933,
+    "best_val_iou": 0.7671367989646064,
+    "best_val_tj": 0.7041470077302721,
+    "test_dice": 0.8393301076832271,
+    "test_iou": 0.7392329247224898,
+    "test_tj": 0.6343860911826292,
+    "metrics_path": "runs/ablations/ba_deeplabv3_lr_ablation/lr_1e-4/isic/ba_deeplabv3/metrics.json"
+  }
+]

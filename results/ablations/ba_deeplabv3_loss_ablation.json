@@ -1,0 +1,41 @@
+[
+  {
+    "run_name": "ba_deeplabv3",
+    "model": "ba_deeplabv3",
+    "loss": "ce_dice",
+    "lr": 0.0002988172051971717,
+    "best_val_dice": 0.8746915260950724,
+    "best_val_iou": 0.7871140771441989,
+    "best_val_tj": 0.7160278161366781,
+    "test_dice": 0.8556824177503586,
+    "test_iou": 0.766482549054282,
+    "test_tj": 0.6870205267554238,
+    "metrics_path": "runs/ablations/ba_deeplabv3_loss_ablation/ce_dice/isic/ba_deeplabv3/metrics.json"
+  },
+  {
+    "run_name": "ba_deeplabv3",
+    "model": "ba_deeplabv3",
+    "loss": "ce_focal_tversky",
+    "lr": 0.0002988172051971717,
+    "best_val_dice": 0.8558969298998514,
+    "best_val_iou": 0.7586827741728889,
+    "best_val_tj": 0.673423621389601,
+    "test_dice": 0.8447601965495518,
+    "test_iou": 0.7466785588434764,
+    "test_tj": 0.6574339682147616,
+    "metrics_path": "runs/ablations/ba_deeplabv3_loss_ablation/ce_focal_tversky/isic/ba_deeplabv3/metrics.json"
+  },
+  {
+    "run_name": "ba_deeplabv3",
+    "model": "ba_deeplabv3",
+    "loss": "ce_tversky",
+    "lr": 0.0002988172051971717,
+    "best_val_dice": 0.8559643493758308,
+    "best_val_iou": 0.7591822743415833,
+    "best_val_tj": 0.6802553666962518,
+    "test_dice": 0.848478031300363,
+    "test_iou": 0.7520049732355845,
+    "test_tj": 0.6716656691971279,
+    "metrics_path": "runs/ablations/ba_deeplabv3_loss_ablation/ce_tversky/isic/ba_deeplabv3/metrics.json"
+  }
+]

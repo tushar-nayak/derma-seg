@@ -12,9 +12,9 @@ Current completed run:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | deeplabv3 | 0.8900 | 0.8134 | 0.7598 | 0.8782 | 0.7991 | 0.7320 |
 
-## Ongoing Ablation Work
+## Completed Ablation Work
 
-The repo now includes two deeper experiment tracks built on top of this baseline:
+The repo now includes two completed deeper experiment tracks built on top of this baseline:
 
 - `deeplabv3` loss ablation: `ce_dice`, `ce_tversky`, `ce_focal_tversky`
 - `ba_deeplabv3` loss ablation: `ce_dice`, `ce_tversky`, `ce_focal_tversky`
@@ -33,6 +33,21 @@ Saved outputs:
 - summaries: `results/ablations/`
 
 The research takeaway from the completed sweep is that the boundary-aware and Tversky-family runs are useful as controlled experiments on contour sensitivity, even though the plain `DeepLabV3 + CE+Dice` baseline remained the strongest completed configuration in this pass.
+
+## Best Ablation Results
+
+| Track | Best Configuration | Test Dice | Test IoU | Test TJ |
+| --- | --- | ---: | ---: | ---: |
+| Baseline | `DeepLabV3 + CE+Dice` | 0.8749 | 0.7946 | 0.7375 |
+| Boundary-aware | `BA-DeepLabV3 + CE+Tversky + lr=1e-3` | 0.8603 | 0.7707 | 0.6978 |
+
+Full saved summaries:
+
+- `results/ablations/deeplabv3_loss_ablation.md`
+- `results/ablations/ba_deeplabv3_loss_ablation.md`
+- `results/ablations/deeplabv3_lr_ablation.md`
+- `results/ablations/ba_deeplabv3_lr_ablation.md`
+- `results/ablations/combined_isic_ablation.md`
 
 ## Qualitative Results
 
